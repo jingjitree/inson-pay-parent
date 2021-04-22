@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>SpringBoot-logBack-demo</contextName>
+    <!-- 文件输出格式 -->
+    <!--
+    <property name="PATTERN" value="%-12(%d{yyyy-MM-dd HH:mm:ss.SSS}) |-%-5level %contextName [%thread] %c [%L] -| %msg%n" />
+    -->
+    <property name="PATTERN" value="%-12(%d{yyyy-MM-dd HH:mm:ss.SSS}) |-%-5level [%thread] %c [%L] -| %msg%n" />
+    <!-- test文件路径 -->
+    <property name="TEST_FILE_PATH" value="logs" />
+    <!-- pro文件路径 -->
+    <property name="PRO_FILE_PATH" value="logs" />
+
+    <property name="LOG_FILE_SIZE" value="100MB"/>
+    <!-- 每天产生一个文件 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+    </appender>
+    <!--对应info级别，文件名以info-xxx.log形式命名,每天产生一个文件-->
+    <appender name="INFOFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--日志名称，如果没有File 属性，那么只会使用FileNamePattern的文件路径规则
+            如果同时有<File>和<FileNamePattern>，那么当天日志是<File>，明天会自动把今天
+            的日志改名为今天的日期。即，<File> 的日志都是当天的。
+        -->
+        <file>${TEST_FILE_PATH}/info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 文件名称 -->
+            <fileNamePattern>${TEST_FILE_PATH}/info.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 只保留最近30天的日志 -->
+            <MaxHistory>30</MaxHistory>
+            <!-- 除按日志记录之外，还配置了日志文件不能超过2M，若超过2M，日志文件会以索引0开始，命名日志文件，例如info-2018-06-10.0.log -->
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${LOG_FILE_SIZE}</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+            <!--用来指定日志文件的上限大小，那么到了这个值，就会删除旧的日志-->
+            <!--<totalSizeCap>1GB</totalSizeCap>-->
+        </rollingPolicy>
+
+        <!--<layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${PATTERN}</pattern>
+        </layout>-->
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+        <!--如果只想要INFO级别的日志，使用如下策略即可只输出INFO级别的日志-->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <!--过滤INFO-->
+            <level>INFO</level>
+            <!--匹配到就允许-->
+            <onMatch>ACCEPT</onMatch>
+            <!--没有匹配到就允许-->
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+    <!--对应info级别，文件名以error-xxx.log形式命名 每天产生一个文件-->
+    <appender name="ERRORFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--日志名称，如果没有File 属性，那么只会使用FileNamePattern的文件路径规则
+            如果同时有<File>和<FileNamePattern>，那么当天日志是<File>，明天会自动把今天
+            的日志改名为今天的日期。即，<File> 的日志都是当天的。
+        -->
+        <file>${TEST_FILE_PATH}/error.log</file>
+        <!--滚动策略，按照时间滚动 TimeBasedRollingPolicy-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 文件名称 -->
+            <fileNamePattern>${TEST_FILE_PATH}/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 只保留最近30天的日志 -->
+            <MaxHistory>30</MaxHistory>
+            <!-- 除按日志记录之外，还配置了日志文件不能超过2M，若超过2M，日志文件会以索引0开始，命名日志文件，例如error-2018-06-10.0.log -->
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${LOG_FILE_SIZE}</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+            <!--用来指定日志文件的上限大小，那么到了这个值，就会删除旧的日志-->
+            <!--<totalSizeCap>1GB</totalSizeCap>-->
+        </rollingPolicy>
+
+        <!--<layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${PATTERN}</pattern>
+        </layout>-->
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+        <!--如果只想要ERROR级别的日志，使用如下策略即可只输出ERROR级别的日志-->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <!--过滤INFO-->
+            <level>ERROR</level>
+            <!--匹配到就允许-->
+            <onMatch>ACCEPT</onMatch>
+            <!--没有匹配到就允许-->
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+    <!--具体个性化某个Controller或者某个包下使用指定级别的日志输出-->
+    <!--<logger name="com.black.example.*" level="INFO"/>-->
+    <logger name="org.springframework.web" level="DEBUG"/>
+    <!--测试环境-->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="ERRORFILE" />
+            <appender-ref ref="INFOFILE"/>
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+    <!--开发环境-->
+    <springProfile name="dev">
+        <root level="info">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+    <!--生产环境-->
+    <springProfile name="prod">
+        <root level="info">
+            <appender-ref ref="ERRORFILE" />
+            <appender-ref ref="INFOFILE"/>
+        </root>
+    </springProfile>
+
+</configuration>
