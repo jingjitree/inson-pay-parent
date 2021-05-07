@@ -1,4 +1,4 @@
-package top.inson.springboot.pay;
+package top.inson.springboot;
 
 
 import org.springframework.boot.SpringApplication;
@@ -6,13 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-//扫包
-@ComponentScan(basePackages = "top.inson.springboot")
-public class PayCoreApplication {
+public class PayNotifyApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PayCoreApplication.class, args);
+        SpringApplication.run(PayNotifyApplication.class, args);
     }
-
 
 }
