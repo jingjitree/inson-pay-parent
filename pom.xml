@@ -17,7 +17,6 @@
     <modules>
         <module>inson-basic-parent</module>
         <module>inson-basic-pay-parent</module>
-
     </modules>
 
     <properties>
@@ -49,6 +48,11 @@
             <dependency>
                 <groupId>top.inson.springboot</groupId>
                 <artifactId>basic-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>top.inson.springboot</groupId>
+                <artifactId>basic-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
