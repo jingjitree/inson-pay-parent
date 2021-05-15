@@ -17,5 +17,6 @@
         <module>pay-core-web</module>
         <!--支付回调模块-->
         <module>pay-notify-web</module>
+        <module>pay-boos-web</module>
     </modules>
 </project>
