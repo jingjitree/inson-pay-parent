@@ -17,6 +17,7 @@
         <module>basic-data</module>
         <!--通用工具模块-->
         <module>basic-util</module>
+        <module>basic-config</module>
     </modules>
 
 
