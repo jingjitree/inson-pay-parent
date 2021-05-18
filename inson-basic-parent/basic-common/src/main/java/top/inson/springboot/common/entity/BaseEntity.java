@@ -1,4 +1,4 @@
-package top.inson.springboot.data.base;
+package top.inson.springboot.common.entity;
 
 
 import lombok.Getter;
