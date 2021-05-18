@@ -17,8 +17,22 @@
         <module>basic-data</module>
         <!--通用工具模块-->
         <module>basic-util</module>
-        <module>basic-config</module>
+        <!--通用安全登录模块-->
+        <module>basic-config-security</module>
+        <!--公共模块-->
+        <module>basic-common</module>
     </modules>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
