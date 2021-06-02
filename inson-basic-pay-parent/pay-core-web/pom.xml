@@ -13,7 +13,13 @@
     </parent>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
+        <!--引入本地模块-->
         <dependency>
             <groupId>top.inson.springboot</groupId>
             <artifactId>basic-util</artifactId>
