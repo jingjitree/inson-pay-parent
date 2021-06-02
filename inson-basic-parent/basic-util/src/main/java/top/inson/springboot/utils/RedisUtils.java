@@ -3,6 +3,7 @@ package top.inson.springboot.utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,11 +17,11 @@ import java.util.concurrent.TimeUnit;
  * @author Lion Li
  * @version 2019-12-06 09:05:38
  */
-//@Component
+@Component
 public class RedisUtils {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate redisTemplate;
  
     /**
      * 设置有效时间
