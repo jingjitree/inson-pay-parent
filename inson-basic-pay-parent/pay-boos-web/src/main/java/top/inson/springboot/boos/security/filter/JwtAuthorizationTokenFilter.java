@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import top.inson.springboot.boos.security.entity.JwtAdminUsers;
 import top.inson.springboot.security.constants.JwtConstants;
 import top.inson.springboot.security.core.AbstractJwtAuthorizationTokenFilter;
-import top.inson.springboot.security.entity.OnlineUser;
 import top.inson.springboot.security.utils.JwtTokenUtil;
 import top.inson.springboot.utils.RedisUtils;
 
@@ -22,6 +21,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
 
 @Slf4j
@@ -42,15 +42,16 @@ public class JwtAuthorizationTokenFilter extends AbstractJwtAuthorizationTokenFi
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         String token = jwtTokenUtil.getToken(request);
         log.info("请求的token：" + token);
-        OnlineUser onlineUser = null;
+        Map<String, Object> tokenMap = null;
         try {
             if(StrUtil.isNotBlank(token))
-                onlineUser = gson.fromJson(redisUtils.getValue(jwtConstants.getOnlineKey() + token).toString(), OnlineUser.class);
+                tokenMap = jwtTokenUtil.getMapFromToken(token);
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-        if(onlineUser != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            JwtAdminUsers userDetails = (JwtAdminUsers) userDetailsService.loadUserByUsername(onlineUser.getAccount());
+        if(tokenMap != null && SecurityContextHolder.getContext().getAuthentication() == null){
+            JwtAdminUsers userDetails = (JwtAdminUsers) userDetailsService.loadUserByUsername((String) tokenMap.get("sub"));
+            userDetails.setPassword(null);
             if(jwtTokenUtil.validateToken(token)){
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

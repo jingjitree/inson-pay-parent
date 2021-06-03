@@ -15,6 +15,7 @@ import java.util.Date;
 @Accessors(chain = true)
 public class JwtAdminUsers implements UserDetails {
 
+    private Integer id;
     private String trueUsername;
     private String account;
     private String password;

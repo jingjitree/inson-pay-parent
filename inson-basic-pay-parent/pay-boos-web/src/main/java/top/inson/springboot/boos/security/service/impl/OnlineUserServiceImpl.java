@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.inson.springboot.boos.security.entity.JwtAdminUsers;
 import top.inson.springboot.security.constants.JwtConstants;
+import top.inson.springboot.security.constants.SecurityConstants;
 import top.inson.springboot.security.entity.OnlineUser;
 import top.inson.springboot.security.service.IOnlineUserService;
 import top.inson.springboot.utils.NetUtils;
@@ -30,7 +31,8 @@ public class OnlineUserServiceImpl implements IOnlineUserService<JwtAdminUsers> 
         String ip = NetUtils.getIp(request);
         OnlineUser onlineUser = new OnlineUser(jwtAdminUsers.getUsername(), jwtAdminUsers.getAccount(),
                 ip, token, new Date());
-        redisUtils.setValueTimeout(jwtConstants.getOnlineKey() + token, gson.toJson(onlineUser),
+        String prefixKey = String.format(SecurityConstants.PREFIX_USER_CACHE, jwtAdminUsers.getId());
+        redisUtils.setValueTimeout(prefixKey, gson.toJson(onlineUser),
                 jwtConstants.getExpiration(), TimeUnit.MILLISECONDS);
     }
 
