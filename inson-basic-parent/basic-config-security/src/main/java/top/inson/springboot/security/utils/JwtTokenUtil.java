@@ -119,6 +119,41 @@ public class JwtTokenUtil implements Serializable {
         return !this.isTokenExpired(token);
     }
 
+    /**
+     * 从令牌中获取数据声明
+     *
+     * @param token 令牌
+     * @return 数据声明
+     */
+    public Map<String, Object> getMapFromToken(String token) {
+        Map<String, Object> claimsFromToken = getClaimsFromToken(token);
+        Map<String, Object> claimsMap = null;
+        if (null != claimsFromToken) {
+            claimsMap = new HashMap<String, Object>(claimsFromToken);
+        }
+        return claimsMap;
+    }
+
+    /**
+     * 从令牌中获取数据声明
+     *
+     * @param token 令牌
+     * @return 数据声明
+     */
+    private Claims getClaimsFromToken(String token) {
+        Claims claims;
+        try {
+            claims = Jwts.parser().setSigningKey(jwtConstants.getSecret())
+                    .parseClaimsJws(token).getBody();
+        }
+        catch (Exception e) {
+            claims = null;
+        }
+        return claims;
+    }
+
+
+
     private Date calculateExpirationDate(Date createdDate) {
         return new Date(createdDate.getTime() + jwtConstants.getExpiration());
     }
