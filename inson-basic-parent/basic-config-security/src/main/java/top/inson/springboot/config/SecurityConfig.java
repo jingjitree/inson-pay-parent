@@ -17,11 +17,13 @@ import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import top.inson.springboot.security.annotation.AnonymousAccess;
 import top.inson.springboot.security.constants.IgnoreUrlConstants;
+import top.inson.springboot.security.core.AbstractJwtAuthorizationTokenFilter;
 import top.inson.springboot.security.core.JwtAuthenticationEntryPoint;
 import top.inson.springboot.security.service.IJwtUserDetailService;
 
@@ -39,6 +41,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private ApplicationContext applicationContext;
     @Autowired
     private JwtAuthenticationEntryPoint authenticationEntryPoint;
+    @Autowired
+    private AbstractJwtAuthorizationTokenFilter authorizationTokenFilter;
 
     @Autowired
     private IJwtUserDetailService jwtUserDetailService;
@@ -119,7 +123,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 // 防止iframe 造成跨域
                 .and().headers().frameOptions().disable();
-//        security
-//                .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        security
+                .addFilterBefore(authorizationTokenFilter, UsernamePasswordAuthenticationFilter.class);
     }
 }
