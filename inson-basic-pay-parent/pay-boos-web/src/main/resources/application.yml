@@ -41,3 +41,14 @@ ignore:
     - /file/**
     - /druid/**
 
+#jwt
+jwt:
+  header: Authorization
+  secret: mySecret
+  # token 过期时间 2个小时
+  expiration: 7200000
+  # 在线用户key
+  online: online-token
+  # 验证码
+  onlineKey: code-key
+
