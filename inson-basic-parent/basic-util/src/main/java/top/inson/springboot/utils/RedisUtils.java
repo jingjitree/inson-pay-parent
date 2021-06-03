@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class RedisUtils {
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
  
     /**
      * 设置有效时间
@@ -93,9 +93,9 @@ public class RedisUtils {
      * @param value 值
      * @param timeout 有效期，单位秒
      */
-    public void setValueTimeout(final String key, final Object value, final long timeout) {
- 
-        redisTemplate.opsForValue().set(key, value, timeout, TimeUnit.SECONDS);
+    public void setValueTimeout(final String key, final Object value, final long timeout, TimeUnit timeUnit) {
+
+        redisTemplate.opsForValue().set(key, value, timeout, timeUnit);
     }
  
     /**

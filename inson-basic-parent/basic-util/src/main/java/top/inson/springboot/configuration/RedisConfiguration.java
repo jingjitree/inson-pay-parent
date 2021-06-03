@@ -2,8 +2,10 @@ package top.inson.springboot.configuration;
 
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
@@ -15,6 +17,7 @@ import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 @ConditionalOnClass(RedisOperations.class)
@@ -27,9 +30,20 @@ public class RedisConfiguration {
     的bean了，如果存在就跳过原始bean的BeanDefinition加载动作
      */
     @ConditionalOnMissingBean(name = "redisTemplate")
-    public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory factory){
-        StringRedisTemplate template = new StringRedisTemplate(factory);
-        template.setValueSerializer(jackson2JsonRedisSerializer());
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory){
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        Jackson2JsonRedisSerializer serializer = new Jackson2JsonRedisSerializer(Object.class);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
+        serializer.setObjectMapper(mapper);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(serializer);
         template.afterPropertiesSet();
         return template;
     }
