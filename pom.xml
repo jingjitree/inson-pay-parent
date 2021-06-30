@@ -68,6 +68,12 @@
                 <version>5.5.4</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>1.3.2</version>
+            </dependency>
+
             <!--引入swagger-->
             <dependency>
                 <groupId>io.springfox</groupId>
