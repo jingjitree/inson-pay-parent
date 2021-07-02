@@ -3,6 +3,7 @@ package top.inson.springboot.pay.web;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,11 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.inson.springboot.common.entity.response.CommonResult;
 import top.inson.springboot.pay.annotation.PayCheckSign;
+import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
 import top.inson.springboot.pay.service.IPayService;
 
 import javax.servlet.http.HttpServletRequest;
 
+@Slf4j
 @Api(tags = "支付相关接口")
 @RestController
 @RequestMapping(value = "/api/pay")
@@ -26,9 +29,13 @@ public class PayController {
     @PayCheckSign
     @ApiOperation(value = "主扫接口")
     @PostMapping("/unifiedOrder")
-    public CommonResult unifiedOrder(@RequestBody UnifiedOrderVo vo, HttpServletRequest request){
-        payService.unifiedOrder(vo);
-        return CommonResult.success();
+    public CommonResult<UnifiedOrderDto> unifiedOrder(@RequestBody UnifiedOrderVo vo, HttpServletRequest request){
+        try {
+            return CommonResult.success(payService.unifiedOrder(vo));
+        } catch (Exception e) {
+            log.error("主扫下单异常", e);
+            return CommonResult.fail(0, e.getMessage());
+        }
     }
 
 

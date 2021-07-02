@@ -20,5 +20,8 @@ public class UnifiedOrderVo implements java.io.Serializable{
     @ApiModelProperty(value = "支付金额（单位：分）")
     private Integer payMoney;
 
+    @ApiModelProperty(value = "商户订单号")
+    private String mchOrderNo;
+
 
 }
