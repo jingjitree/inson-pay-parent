@@ -22,10 +22,6 @@
         <!--引入本地模块-->
         <dependency>
             <groupId>top.inson.springboot</groupId>
-            <artifactId>basic-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>top.inson.springboot</groupId>
             <artifactId>basic-data</artifactId>
         </dependency>
     </dependencies>

@@ -22,10 +22,6 @@
             <groupId>top.inson.springboot</groupId>
             <artifactId>basic-data</artifactId>
         </dependency>
-        <dependency>
-            <groupId>top.inson.springboot</groupId>
-            <artifactId>basic-util</artifactId>
-        </dependency>
 
         <!--引入swagger-ui-->
         <dependency>
