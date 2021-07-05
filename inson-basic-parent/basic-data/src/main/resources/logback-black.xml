@@ -5,7 +5,7 @@
     <!--
     <property name="PATTERN" value="%-12(%d{yyyy-MM-dd HH:mm:ss.SSS}) |-%-5level %contextName [%thread] %c [%L] -| %msg%n" />
     -->
-    <property name="PATTERN" value="%-12(%d{yyyy-MM-dd HH:mm:ss.SSS}) |-%-5level [%thread] %c [%L] -| %msg%n" />
+    <property name="PATTERN" value="%-12(%d{yyyy-MM-dd HH:mm:ss.SSS}) |-%-5level [%thread] %X{threadId} %c [%L] -| %msg%n" />
     <!-- test文件路径 -->
     <property name="TEST_FILE_PATH" value="logs" />
     <!-- pro文件路径 -->
