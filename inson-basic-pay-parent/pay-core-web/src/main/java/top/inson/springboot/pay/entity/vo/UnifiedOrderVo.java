@@ -23,5 +23,10 @@ public class UnifiedOrderVo implements java.io.Serializable{
     @ApiModelProperty(value = "商户订单号")
     private String mchOrderNo;
 
+    @ApiModelProperty(value = "回调接收地址")
+    private String notifyUrl;
+
+    @ApiModelProperty(value = "同步跳转地址")
+    private String returnUrl;
 
 }

@@ -11,6 +11,8 @@ import top.inson.springboot.data.entity.MerCashier;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
 import top.inson.springboot.pay.service.IPayService;
+import top.inson.springboot.pay.service.channel.IChannelService;
+import top.inson.springboot.pay.strategy.IStrategyService;
 
 
 @Slf4j
@@ -18,6 +20,9 @@ import top.inson.springboot.pay.service.IPayService;
 public class PayServiceImpl implements IPayService {
     @Autowired
     private IMerCashierMapper merCashierMapper;
+
+    @Autowired
+    private IStrategyService strategyService;
 
 
     private Gson gson = new GsonBuilder().create();
@@ -28,7 +33,8 @@ public class PayServiceImpl implements IPayService {
                 .andEqualTo("cashier", vo.getCashier());
         MerCashier merCashier = merCashierMapper.selectOneByExample(example);
 
-
+        IChannelService channelService = strategyService.getChannelService("YPL");
+        channelService.unifiedOrder(null);
         return null;
     }
 
