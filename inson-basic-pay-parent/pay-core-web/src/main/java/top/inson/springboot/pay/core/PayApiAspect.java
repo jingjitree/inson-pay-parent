@@ -75,14 +75,12 @@ public class PayApiAspect {
     }
 
     private void validateSign(String signType, String paySign, String reqJson) {
-        log.info("signType:{}", signType);
-        log.info("paySign:{}", paySign);
         JsonObject reqObj = gson.fromJson(reqJson, JsonObject.class);
         String cashier = reqObj.get("cashier").getAsString();
         if (StrUtil.isEmpty(signType))
             throw new BadRequestException("签名类型:signType，不能为空");
         if (StrUtil.isEmpty(paySign))
-            throw new BadRequestException("签名:{paySign},不能为空");
+            throw new BadRequestException("签名:paySign,不能为空");
         if (StrUtil.isEmpty(cashier))
             throw new BadRequestException("商户账户：cashier，不能为空");
         Example example = new Example(MerCashier.class);
@@ -91,6 +89,7 @@ public class PayApiAspect {
         MerCashier merCashier = merCashierMapper.selectOneByExample(example);
         if (merCashier == null)
             throw new BadRequestException("未查询到支付账户");
+        log.info("签名类型signType:{}", signType);
         switch (signType){
             case "MD5":
                 String signParams = reqJson + "&key=" + merCashier.getSignKey();
