@@ -28,6 +28,12 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
         </dependency>
+
+        <!--引入本地模块-->
+        <dependency>
+            <groupId>top.inson.springboot</groupId>
+            <artifactId>basic-util</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
