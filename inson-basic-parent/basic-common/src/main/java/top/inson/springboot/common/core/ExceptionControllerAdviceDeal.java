@@ -36,7 +36,6 @@ public class ExceptionControllerAdviceDeal {
 
     @ExceptionHandler(value = BadRequestException.class)
     public CommonResult badRequestHandler(Exception e){
-        log.info("参数有误", e);
         return CommonResult.fail(HttpStatus.BAD_REQUEST.value(), StrUtil.isEmpty(e.getMessage()) ? "参数有误" : e.getMessage());
     }
 
