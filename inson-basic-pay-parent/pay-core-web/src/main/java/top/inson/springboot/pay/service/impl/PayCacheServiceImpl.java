@@ -1,8 +1,6 @@
 package top.inson.springboot.pay.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
@@ -22,7 +20,6 @@ public class PayCacheServiceImpl implements IPayCacheService {
     @Autowired
     private RedisUtils redisUtils;
 
-    private Gson gson = new GsonBuilder().create();
     @Override
     public MerCashier getCashier(String cashier) {
         if (StrUtil.isEmpty(cashier))
@@ -35,10 +32,9 @@ public class PayCacheServiceImpl implements IPayCacheService {
             MerCashier merCashier = merCashierMapper.selectOneByExample(example);
             if (merCashier == null)
                 return null;
-            redisUtils.hashPut(PayRedisConstant.PAY_CASHIER_PREFIX + cashier, PayRedisConstant.CASHIER_KEY, gson.toJson(merCashier));
+            redisUtils.hashPut(PayRedisConstant.PAY_CASHIER_PREFIX + cashier, PayRedisConstant.CASHIER_KEY, merCashier);
         }
-        String strCashier = redisUtils.hashGet(PayRedisConstant.PAY_CASHIER_PREFIX + cashier, PayRedisConstant.CASHIER_KEY).toString();
-        return gson.fromJson(strCashier, MerCashier.class);
+        return (MerCashier) redisUtils.hashGet(PayRedisConstant.PAY_CASHIER_PREFIX + cashier, PayRedisConstant.CASHIER_KEY);
     }
 
 }
