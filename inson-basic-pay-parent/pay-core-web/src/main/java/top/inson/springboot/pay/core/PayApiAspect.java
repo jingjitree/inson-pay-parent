@@ -17,10 +17,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.common.exception.BadRequestException;
-import top.inson.springboot.data.dao.IMerCashierMapper;
 import top.inson.springboot.data.entity.MerCashier;
+import top.inson.springboot.pay.service.IPayCacheService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.annotation.Annotation;
@@ -30,8 +29,11 @@ import java.lang.reflect.Method;
 @Aspect
 @Component
 public class PayApiAspect {
+
+
     @Autowired
-    private IMerCashierMapper merCashierMapper;
+    private IPayCacheService payCacheService;
+
 
     private Gson gson = new GsonBuilder().create();
 
@@ -83,12 +85,12 @@ public class PayApiAspect {
             throw new BadRequestException("签名:paySign,不能为空");
         if (StrUtil.isEmpty(cashier))
             throw new BadRequestException("商户账户：cashier，不能为空");
-        Example example = new Example(MerCashier.class);
-        example.createCriteria()
-                .andEqualTo("cashier", cashier);
-        MerCashier merCashier = merCashierMapper.selectOneByExample(example);
+
+        //缓存中获取账号
+        MerCashier merCashier = payCacheService.getCashier(cashier);
         if (merCashier == null)
             throw new BadRequestException("未查询到支付账户");
+
         log.info("签名类型signType:{}", signType);
         switch (signType){
             case "MD5":
