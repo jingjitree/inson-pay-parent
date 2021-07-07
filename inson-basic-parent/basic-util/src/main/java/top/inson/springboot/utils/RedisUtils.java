@@ -135,7 +135,21 @@ public class RedisUtils {
  
         redisTemplate.opsForHash().put(key, hKey, value);
     }
- 
+
+    /**
+     * 往Hash中存入数据
+     *
+     * @param key Redis键
+     * @param hKey Hash键
+     * @param value 值
+     * @param timeOut hash的超时时间
+     */
+    public void hashPut(final String key, final String hKey, final Object value, long timeOut, TimeUnit timeUnit) {
+
+        redisTemplate.opsForHash().put(key, hKey, value);
+        redisTemplate.expire(key, timeOut, timeUnit);
+    }
+
     /**
      * 往Hash中存入多个数据
      *
