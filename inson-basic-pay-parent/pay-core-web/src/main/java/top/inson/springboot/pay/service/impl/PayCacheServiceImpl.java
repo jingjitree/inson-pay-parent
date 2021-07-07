@@ -10,6 +10,8 @@ import top.inson.springboot.pay.constant.PayRedisConstant;
 import top.inson.springboot.pay.service.IPayCacheService;
 import top.inson.springboot.utils.RedisUtils;
 
+import java.util.concurrent.TimeUnit;
+
 
 @Service
 public class PayCacheServiceImpl implements IPayCacheService {
@@ -32,7 +34,7 @@ public class PayCacheServiceImpl implements IPayCacheService {
             MerCashier merCashier = merCashierMapper.selectOneByExample(example);
             if (merCashier == null)
                 return null;
-            redisUtils.hashPut(PayRedisConstant.PAY_CASHIER_PREFIX + cashier, PayRedisConstant.CASHIER_KEY, merCashier);
+            redisUtils.hashPut(PayRedisConstant.PAY_CASHIER_PREFIX + cashier, PayRedisConstant.CASHIER_KEY, merCashier, 1L, TimeUnit.DAYS);
         }
         return (MerCashier) redisUtils.hashGet(PayRedisConstant.PAY_CASHIER_PREFIX + cashier, PayRedisConstant.CASHIER_KEY);
     }
