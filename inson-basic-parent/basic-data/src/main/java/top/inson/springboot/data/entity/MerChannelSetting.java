@@ -13,7 +13,8 @@ import javax.persistence.Table;
 public class MerChannelSetting extends BaseEntity {
 
     private String merchantNo;
-    private String channelId;
+    private String channelNo;
     private Boolean enable;
+    private Integer payType;
 
 }
