@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.inson.springboot.common.entity.response.CommonResult;
+import top.inson.springboot.common.exception.BadBusinessException;
 import top.inson.springboot.pay.annotation.PayCheckSign;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
@@ -32,6 +33,9 @@ public class PayController {
     public CommonResult<UnifiedOrderDto> unifiedOrder(@RequestBody UnifiedOrderVo vo, HttpServletRequest request){
         try {
             return CommonResult.success(payService.unifiedOrder(vo));
+        }catch (BadBusinessException e){
+            log.warn("主扫业务失败", e);
+            return CommonResult.fail(e.getStatus(), e.getMessage());
         } catch (Exception e) {
             log.error("主扫下单异常", e);
             return CommonResult.fail(0, e.getMessage());

@@ -35,7 +35,7 @@ public class PayApiAspect {
     private IPayCacheService payCacheService;
 
 
-    private Gson gson = new GsonBuilder().create();
+    private final Gson gson = new GsonBuilder().create();
 
     @Pointcut("@annotation(top.inson.springboot.pay.annotation.PayCheckSign)")
     public void pointCut(){
