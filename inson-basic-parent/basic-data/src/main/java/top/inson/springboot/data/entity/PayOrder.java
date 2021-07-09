@@ -22,6 +22,8 @@ public class PayOrder extends BaseEntity {
     private String mchOrderNo;
     private String cashier;
     private String merchantNo;
+    private String body;
+    private String subject;
     private BigDecimal payAmount;
     private BigDecimal discountAmount;
     private BigDecimal orderRate;
@@ -35,7 +37,9 @@ public class PayOrder extends BaseEntity {
     private String openid;
     private String authorCode;
     private Integer orderStatus;
+    private String notifyUrl;
     private BigDecimal refundAmount;
     private Date payTime;
+    private String remark;
 
 }
