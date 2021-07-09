@@ -17,6 +17,7 @@ import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
 import top.inson.springboot.pay.service.IPayService;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 @Slf4j
 @Api(tags = "支付相关接口")
@@ -30,7 +31,7 @@ public class PayController {
     @PayCheckSign
     @ApiOperation(value = "主扫接口")
     @PostMapping("/unifiedOrder")
-    public CommonResult<UnifiedOrderDto> unifiedOrder(@RequestBody UnifiedOrderVo vo, HttpServletRequest request){
+    public CommonResult<UnifiedOrderDto> unifiedOrder(@RequestBody @Valid UnifiedOrderVo vo, HttpServletRequest request){
         try {
             return CommonResult.success(payService.unifiedOrder(vo));
         }catch (BadBusinessException e){

@@ -31,6 +31,13 @@ public class UnifiedOrderVo implements java.io.Serializable{
     @NotBlank(message = "商户订单号不允许为空")
     private String mchOrderNo;
 
+    @ApiModelProperty(value = "订单标题")
+    @NotBlank(message = "订单标题不能为空")
+    private String body;
+
+    @ApiModelProperty(value = "订单描述")
+    private String subject;
+
     @ApiModelProperty(value = "回调接收地址")
     @NotBlank(message = "回调地址不允许为空")
     private String notifyUrl;

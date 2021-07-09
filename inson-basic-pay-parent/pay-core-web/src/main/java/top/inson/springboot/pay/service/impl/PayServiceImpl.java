@@ -1,5 +1,6 @@
 package top.inson.springboot.pay.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
@@ -16,6 +17,8 @@ import top.inson.springboot.data.dao.IPayOrderMapper;
 import top.inson.springboot.data.entity.MerCashier;
 import top.inson.springboot.data.entity.MerChannelSetting;
 import top.inson.springboot.data.entity.PayOrder;
+import top.inson.springboot.data.enums.PayCategoryEnum;
+import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
@@ -23,6 +26,9 @@ import top.inson.springboot.pay.service.IPayCacheService;
 import top.inson.springboot.pay.service.IPayService;
 import top.inson.springboot.pay.service.channel.IChannelService;
 import top.inson.springboot.pay.strategy.IStrategyService;
+import top.inson.springboot.utils.AmountUtil;
+
+import java.math.BigDecimal;
 
 
 @Slf4j
@@ -65,6 +71,8 @@ public class PayServiceImpl implements IPayService {
         if (countOrder > 0)
             throw new BadBusinessException(PayBadBusinessEnum.MCH_ORDER_EXISTS);
 
+        BigDecimal bigAmount = new BigDecimal(AmountUtil.changeFenToYuan(vo.getPayMoney()));
+
         Example example = new Example(MerChannelSetting.class);
         example.createCriteria()
                 .andEqualTo("merchantNo", merchantNo)
@@ -80,20 +88,21 @@ public class PayServiceImpl implements IPayService {
             throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_EXISTS);
         //构建订单信息
         payOrder.setChannelNo(channelNo)
-                .setCashier(vo.getCashier())
-                .setPayType(vo.getPayType());
+                .setPayCategory(PayCategoryEnum.UNIFIED_PAY.getCode())
+                .setPayAmount(bigAmount);
+        BeanUtil.copyProperties(vo, payOrder);
         return channelService;
     }
 
     private void savePayOrder(UnifiedOrderVo vo, MerCashier merCashier, PayOrder payOrder) {
         //平台订单号
         String orderNo = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN) +
-                merCashier.getMerchantNo() + RandomUtil.randomNumbers(8);
+                merCashier.getMerchantNo().substring(8) + RandomUtil.randomNumbers(8);
         log.info("支付订单号orderNo:" + orderNo);
         payOrder.setOrderNo(orderNo)
-                .setMchOrderNo(vo.getMchOrderNo())
-                .setMerchantNo(merCashier.getMerchantNo());
-
+                .setMerchantNo(merCashier.getMerchantNo())
+                .setOrderStatus(PayOrderStatusEnum.PAYING.getCode());
+        payOrderMapper.insertSelective(payOrder);
 
     }
 
