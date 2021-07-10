@@ -3,11 +3,10 @@ package top.inson.springboot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @SpringBootApplication
-//扫包
-//@ComponentScan(basePackages = "top.inson.springboot")
+@EnableSwagger2
 public class PayCoreApplication {
 
     public static void main(String[] args) {

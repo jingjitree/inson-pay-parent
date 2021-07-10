@@ -24,6 +24,12 @@
             <groupId>top.inson.springboot</groupId>
             <artifactId>basic-data</artifactId>
         </dependency>
+
+        <!--swagger-ui-->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+        </dependency>
     </dependencies>
 
 
