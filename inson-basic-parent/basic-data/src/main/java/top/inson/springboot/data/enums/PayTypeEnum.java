@@ -11,6 +11,16 @@ public enum PayTypeEnum {
 
     ;
 
+    public static PayTypeEnum getCategory(Integer code){
+        if (code == null)
+            return null;
+        for (PayTypeEnum en : PayTypeEnum.values()) {
+            if (code.equals(en.getCode()))
+                return en;
+        }
+        return null;
+    }
+
     private final int code;
     private final String desc;
 }

@@ -14,6 +14,16 @@ public enum PayCategoryEnum {
     APP_PAY(6,"app支付"),
     ;
 
+    public static PayCategoryEnum getCategory(Integer code){
+        if (code == null)
+            return null;
+        for (PayCategoryEnum en : PayCategoryEnum.values()) {
+            if (code.equals(en.getCode()))
+                return en;
+        }
+        return null;
+    }
+
     private final int code;
     private final String desc;
 }
