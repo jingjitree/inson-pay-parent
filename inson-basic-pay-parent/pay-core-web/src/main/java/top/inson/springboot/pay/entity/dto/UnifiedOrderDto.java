@@ -5,9 +5,11 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @Getter
 @Setter
+@Accessors(chain = true)
 @ApiModel(value = "主扫响应数据实体")
 public class UnifiedOrderDto {
 
@@ -24,6 +26,9 @@ public class UnifiedOrderDto {
 
     @ApiModelProperty(value = "订单状态（1.支付中，2.支付成功，3.支付失败，4.已取消，5.已退款，6.全额退款）")
     private Integer orderStatus;
+
+    @ApiModelProperty(value = "订单描述")
+    private String orderDesc;
 
     @ApiModelProperty(value = "订单金额（单位：分）")
     private Integer payAmount;

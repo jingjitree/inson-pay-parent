@@ -1,6 +1,7 @@
 package top.inson.springboot.pay.entity.vo;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -44,5 +45,8 @@ public class UnifiedOrderVo implements java.io.Serializable{
 
     @ApiModelProperty(value = "同步跳转地址")
     private String returnUrl;
+
+    @JsonIgnore
+    private String reqIp;
 
 }

@@ -20,6 +20,7 @@ public class EpayConfig {
     private String certPwd;
 
     private String certPath;
+    private String signType;
 
     private String baseUrl;
 

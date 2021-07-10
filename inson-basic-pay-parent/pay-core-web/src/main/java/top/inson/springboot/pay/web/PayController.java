@@ -15,6 +15,7 @@ import top.inson.springboot.pay.annotation.PayCheckSign;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
 import top.inson.springboot.pay.service.IPayService;
+import top.inson.springboot.utils.NetUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -33,6 +34,9 @@ public class PayController {
     @PostMapping("/unifiedOrder")
     public CommonResult<UnifiedOrderDto> unifiedOrder(@RequestBody @Valid UnifiedOrderVo vo, HttpServletRequest request){
         try {
+            String reqIp = NetUtils.getIp(request);
+            vo.setReqIp(reqIp);
+            log.debug("接口请求IP" + reqIp);
             return CommonResult.success(payService.unifiedOrder(vo));
         }catch (BadBusinessException e){
             log.warn("主扫业务失败", e);

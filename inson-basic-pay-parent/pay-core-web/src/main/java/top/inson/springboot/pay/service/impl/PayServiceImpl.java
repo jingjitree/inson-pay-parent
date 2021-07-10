@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -11,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.common.exception.BadBusinessException;
+import top.inson.springboot.data.dao.IChannelSubmerConfigMapper;
 import top.inson.springboot.data.dao.IMerCashierMapper;
 import top.inson.springboot.data.dao.IMerChannelSettingMapper;
 import top.inson.springboot.data.dao.IPayOrderMapper;
+import top.inson.springboot.data.entity.ChannelSubmerConfig;
 import top.inson.springboot.data.entity.MerCashier;
 import top.inson.springboot.data.entity.MerChannelSetting;
 import top.inson.springboot.data.entity.PayOrder;
@@ -40,6 +43,8 @@ public class PayServiceImpl implements IPayService {
     private IMerChannelSettingMapper merChannelSettingMapper;
     @Autowired
     private IPayOrderMapper payOrderMapper;
+    @Autowired
+    private IChannelSubmerConfigMapper channelSubmerConfigMapper;
 
 
     @Autowired
@@ -58,9 +63,28 @@ public class PayServiceImpl implements IPayService {
         IChannelService channelService = this.validPayParam(vo, merCashier.getMerchantNo(), payOrder);
         //保存支付订单
         this.savePayOrder(vo, merCashier, payOrder);
+        Example subCofExample = new Example(ChannelSubmerConfig.class);
+        subCofExample.createCriteria()
+                .andEqualTo("channelNo", payOrder.getChannelNo())
+                .andEqualTo("merchantNo", payOrder.getMerchantNo())
+                .andEqualTo("payType", payOrder.getPayType());
+        ChannelSubmerConfig submerConfig = channelSubmerConfigMapper.selectOneByExample(subCofExample);
 
-        channelService.unifiedOrder(payOrder);
-        return null;
+        UnifiedOrderDto unifiedDto = channelService.unifiedOrder(payOrder, submerConfig);
+        if (unifiedDto != null){
+            Example example = new Example(PayOrder.class);
+            example.createCriteria()
+                    .andEqualTo("orderNo", payOrder.getOrderNo());
+            //请求成功，更新订单状态
+            PayOrder upOrder = new PayOrder()
+                    .setOrderStatus(PayOrderStatusEnum.PAYING.getCode())
+                    .setOrderDesc(StrUtil.isBlank(unifiedDto.getOrderDesc()) ? "下单成功" : unifiedDto.getOrderDesc());
+            payOrderMapper.updateByExampleSelective(upOrder, example);
+            payOrder.setOrderStatus(upOrder.getOrderStatus())
+                    .setOrderDesc(upOrder.getOrderDesc());
+            BeanUtil.copyProperties(payOrder, unifiedDto);
+        }
+        return unifiedDto;
     }
 
     private IChannelService validPayParam(UnifiedOrderVo vo, String merchantNo, PayOrder payOrder) {
@@ -101,7 +125,7 @@ public class PayServiceImpl implements IPayService {
         log.info("支付订单号orderNo:" + orderNo);
         payOrder.setOrderNo(orderNo)
                 .setMerchantNo(merCashier.getMerchantNo())
-                .setOrderStatus(PayOrderStatusEnum.PAYING.getCode());
+                .setOrderStatus(PayOrderStatusEnum.CREATE_ORDER.getCode());
         payOrderMapper.insertSelective(payOrder);
 
     }

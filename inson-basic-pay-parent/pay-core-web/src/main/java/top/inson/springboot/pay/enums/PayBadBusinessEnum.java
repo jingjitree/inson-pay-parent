@@ -13,7 +13,11 @@ public enum PayBadBusinessEnum implements IBadBusiness {
 
 
     MCH_ORDER_EXISTS(1101,"商户订单号不允许重复"),
+    CREATE_ORDER_FAIL(1102,"下单失败"),
 
+
+    BUSINESS_ERROR(2001,"支付业务出错"),
+    BUSINESS_SIGN_ERROR(2002,"支付业务签名出错")
     ;
 
     private final Integer code;
