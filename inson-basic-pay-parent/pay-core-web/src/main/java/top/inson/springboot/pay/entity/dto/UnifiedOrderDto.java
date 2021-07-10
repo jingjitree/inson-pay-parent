@@ -21,8 +21,8 @@ public class UnifiedOrderDto {
     @ApiModelProperty(value = "支付账户")
     private String cashier;
 
-    @ApiModelProperty(value = "商户编号")
-    private String merchantNo;
+//    @ApiModelProperty(value = "商户编号")
+//    private String merchantNo;
 
     @ApiModelProperty(value = "订单状态（1.支付中，2.支付成功，3.支付失败，4.已取消，5.已退款，6.全额退款）")
     private Integer orderStatus;
