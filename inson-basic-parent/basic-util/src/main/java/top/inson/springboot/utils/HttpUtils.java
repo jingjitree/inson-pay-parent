@@ -30,6 +30,8 @@ public class HttpUtils extends HttpUtil {
             );
         if (MapUtil.isEmpty(headers)){
             headers = MapUtil.of(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue());
+        }else if (!headers.containsKey(Header.CONTENT_TYPE.getValue())){
+            headers.put(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue());
         }
         log.info("请求头headers：{}", headers);
         log.info("请求参数reqJson：{}", reqJson);

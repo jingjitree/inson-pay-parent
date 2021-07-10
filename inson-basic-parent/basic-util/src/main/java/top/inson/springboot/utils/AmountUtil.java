@@ -16,11 +16,22 @@ public class AmountUtil {
         return bigAmount.divide(HUNDRED, 2, BigDecimal.ROUND_HALF_UP).toString();
     }
 
-    public static Integer changeYuanToFen(String amount){
-        if (StrUtil.isEmpty(amount))
-            return null;
-        BigDecimal bigAmount = new BigDecimal(amount).setScale(2, BigDecimal.ROUND_HALF_UP);
-        return bigAmount.multiply(HUNDRED).intValue();
+    public static Integer changeYuanToFen(Object amount){
+        if (amount instanceof String) {
+            String strAmount = (String) amount;
+            if (StrUtil.isEmpty(strAmount))
+                return null;
+            BigDecimal bigAmount = new BigDecimal(strAmount).setScale(2, BigDecimal.ROUND_HALF_UP);
+            return bigAmount.multiply(HUNDRED).intValue();
+        }else if (amount instanceof BigDecimal){
+            BigDecimal bigAmount = (BigDecimal) amount;
+            return bigAmount.multiply(HUNDRED).intValue();
+        }else if (amount instanceof Double){
+            Double dobAmount = (Double) amount;
+            BigDecimal bigAmount = new BigDecimal(dobAmount).setScale(2, BigDecimal.ROUND_HALF_UP);
+            return bigAmount.multiply(HUNDRED).intValue();
+        }
+        return null;
     }
 
 
