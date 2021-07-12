@@ -23,6 +23,7 @@ import top.inson.springboot.data.entity.PayOrder;
 import top.inson.springboot.data.enums.PayCategoryEnum;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
+import top.inson.springboot.pay.entity.vo.MicroPayVo;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
 import top.inson.springboot.pay.service.IPayCacheService;
@@ -59,10 +60,17 @@ public class PayServiceImpl implements IPayService {
     public UnifiedOrderDto unifiedOrder(UnifiedOrderVo vo) throws Exception{
         MerCashier merCashier = payCacheService.getCashier(vo.getCashier());
         log.info("支付账户cashier、{}", gson.toJson(merCashier));
-        PayOrder payOrder = new PayOrder();
-        IChannelService channelService = this.validPayParam(vo, merCashier.getMerchantNo(), payOrder);
+        String merchantNo = merCashier.getMerchantNo();
+        //构建支付订单
+        PayOrder payOrder = new PayOrder()
+                .setPayCategory(PayCategoryEnum.UNIFIED_PAY.getCode());
+        IChannelService channelService = this.validPayParam(vo.getMchOrderNo(), vo.getPayMoney(), vo.getPayType(),
+                merchantNo, payOrder);
         //保存支付订单
-        this.savePayOrder(vo, merCashier, payOrder);
+        BeanUtil.copyProperties(vo, payOrder);
+        this.savePayOrder(merchantNo, payOrder);
+
+        //查询渠道配置
         Example subCofExample = new Example(ChannelSubmerConfig.class);
         subCofExample.createCriteria()
                 .andEqualTo("channelNo", payOrder.getChannelNo())
@@ -80,6 +88,7 @@ public class PayServiceImpl implements IPayService {
                     .setOrderStatus(PayOrderStatusEnum.PAYING.getCode())
                     .setOrderDesc(StrUtil.isBlank(unifiedDto.getOrderDesc()) ? "下单成功" : unifiedDto.getOrderDesc());
             payOrderMapper.updateByExampleSelective(upOrder, example);
+            //设置接口返回参数
             payOrder.setOrderStatus(upOrder.getOrderStatus())
                     .setOrderDesc(upOrder.getOrderDesc());
             BeanUtil.copyProperties(payOrder, unifiedDto);
@@ -87,21 +96,34 @@ public class PayServiceImpl implements IPayService {
         return unifiedDto;
     }
 
-    private IChannelService validPayParam(UnifiedOrderVo vo, String merchantNo, PayOrder payOrder) {
+
+    @Override
+    public UnifiedOrderDto microPay(MicroPayVo vo) {
+
+
+
+
+        return null;
+    }
+
+    private IChannelService validPayParam(String mchOrderNo, Integer payMoney, Integer payType, String merchantNo, PayOrder payOrder) {
+        BigDecimal bigAmount = new BigDecimal(AmountUtil.changeFenToYuan(payMoney));
+        if (BigDecimal.ZERO.compareTo(bigAmount) > 0) {
+            throw new BadBusinessException(PayBadBusinessEnum.PAY_MONEY_ERROR);
+        }
+
         Example orderExample = new Example(PayOrder.class);
         orderExample.createCriteria()
-                .andEqualTo("mchOrderNo", vo.getMchOrderNo());
+                .andEqualTo("mchOrderNo", mchOrderNo);
         int countOrder = payOrderMapper.selectCountByExample(orderExample);
         if (countOrder > 0)
             throw new BadBusinessException(PayBadBusinessEnum.MCH_ORDER_EXISTS);
-
-        BigDecimal bigAmount = new BigDecimal(AmountUtil.changeFenToYuan(vo.getPayMoney()));
 
         Example example = new Example(MerChannelSetting.class);
         example.createCriteria()
                 .andEqualTo("merchantNo", merchantNo)
                 .andEqualTo("enable", Boolean.TRUE)
-                .andEqualTo("payType", vo.getPayType());
+                .andEqualTo("payType", payType);
         MerChannelSetting merChannel = merChannelSettingMapper.selectOneByExample(example);
         if (merChannel == null)
             throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_SETTING);
@@ -112,19 +134,17 @@ public class PayServiceImpl implements IPayService {
             throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_EXISTS);
         //构建订单信息
         payOrder.setChannelNo(channelNo)
-                .setPayCategory(PayCategoryEnum.UNIFIED_PAY.getCode())
                 .setPayAmount(bigAmount);
-        BeanUtil.copyProperties(vo, payOrder);
         return channelService;
     }
 
-    private void savePayOrder(UnifiedOrderVo vo, MerCashier merCashier, PayOrder payOrder) {
+    private void savePayOrder(String merchantNo, PayOrder payOrder) {
         //平台订单号
         String orderNo = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN) +
-                merCashier.getMerchantNo().substring(8) + RandomUtil.randomNumbers(8);
+                merchantNo.substring(8) + RandomUtil.randomNumbers(8);
         log.info("支付订单号orderNo:" + orderNo);
         payOrder.setOrderNo(orderNo)
-                .setMerchantNo(merCashier.getMerchantNo())
+                .setMerchantNo(merchantNo)
                 .setOrderStatus(PayOrderStatusEnum.CREATE_ORDER.getCode());
         payOrderMapper.insertSelective(payOrder);
 

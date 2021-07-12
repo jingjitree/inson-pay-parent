@@ -8,16 +8,11 @@ import lombok.Setter;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
-@ApiModel(value = "主扫支付请求实体")
-public class UnifiedOrderVo extends PayBaseVo implements java.io.Serializable{
-
-    @ApiModelProperty(value = "支付方式（1.微信，2.支付宝）")
-    @NotNull(message = "支付方式不能为空")
-    private Integer payType;
+@ApiModel(value = "被扫请求参数")
+public class MicroPayVo extends PayBaseVo implements java.io.Serializable{
 
     @ApiModelProperty(value = "支付金额（单位：分）")
     @Min(value = 1, message = "最小支付金额一分")
@@ -37,9 +32,5 @@ public class UnifiedOrderVo extends PayBaseVo implements java.io.Serializable{
     @ApiModelProperty(value = "回调接收地址")
     @NotBlank(message = "回调地址不允许为空")
     private String notifyUrl;
-
-    @ApiModelProperty(value = "同步跳转地址")
-    private String returnUrl;
-
 
 }

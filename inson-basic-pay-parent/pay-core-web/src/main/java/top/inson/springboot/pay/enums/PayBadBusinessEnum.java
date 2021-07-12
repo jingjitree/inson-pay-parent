@@ -14,6 +14,7 @@ public enum PayBadBusinessEnum implements IBadBusiness {
 
     MCH_ORDER_EXISTS(1101,"商户订单号不允许重复"),
     CREATE_ORDER_FAIL(1102,"下单失败"),
+    PAY_MONEY_ERROR(1103,"支付金额有误"),
 
 
     BUSINESS_ERROR(2001,"支付业务出错"),

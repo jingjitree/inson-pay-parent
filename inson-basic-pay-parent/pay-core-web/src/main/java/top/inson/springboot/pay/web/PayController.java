@@ -13,6 +13,7 @@ import top.inson.springboot.common.entity.response.CommonResult;
 import top.inson.springboot.common.exception.BadBusinessException;
 import top.inson.springboot.pay.annotation.PayCheckSign;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
+import top.inson.springboot.pay.entity.vo.MicroPayVo;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
 import top.inson.springboot.pay.service.IPayService;
 import top.inson.springboot.utils.NetUtils;
@@ -48,10 +49,11 @@ public class PayController {
     }
 
 
+    @PayCheckSign
     @ApiOperation(value = "被扫接口")
     @PostMapping("/microPay")
-    public CommonResult microPay(){
-
+    public CommonResult microPay(@RequestBody @Valid MicroPayVo vo, HttpServletRequest request){
+        
         return CommonResult.success();
     }
 
