@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@ApiModel(value = "被扫响应实体")
-public class MicroPayDto extends PayBaseDto implements java.io.Serializable{
+@ApiModel(value = "订单查询响应实体")
+public class OrderQueryDto extends PayBaseDto implements java.io.Serializable{
 
 }
