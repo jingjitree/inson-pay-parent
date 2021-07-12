@@ -23,10 +23,8 @@ import top.inson.springboot.data.entity.PayOrder;
 import top.inson.springboot.data.enums.PayCategoryEnum;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.data.enums.PayTypeEnum;
-import top.inson.springboot.pay.entity.dto.MicroPayDto;
-import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
-import top.inson.springboot.pay.entity.vo.MicroPayVo;
-import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
+import top.inson.springboot.pay.entity.dto.*;
+import top.inson.springboot.pay.entity.vo.*;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
 import top.inson.springboot.pay.service.IPayCacheService;
 import top.inson.springboot.pay.service.IPayService;
@@ -141,6 +139,21 @@ public class PayServiceImpl implements IPayService {
             BeanUtil.copyProperties(payOrder, payDto);
         }
         return payDto;
+    }
+
+    @Override
+    public RefundOrderDto refundOrder(RefundOrderVo vo) {
+        return null;
+    }
+
+    @Override
+    public OrderQueryDto orderQuery(OrderQueryVo vo) {
+        return null;
+    }
+
+    @Override
+    public RefundQueryDto refundQuery(RefundQueryVo vo) {
+        return null;
     }
 
     private IChannelService validPayParam(String mchOrderNo, Integer payMoney, Integer payType, String merchantNo, PayOrder payOrder) {

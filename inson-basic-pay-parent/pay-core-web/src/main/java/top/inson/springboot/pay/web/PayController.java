@@ -81,7 +81,7 @@ public class PayController {
     @PostMapping("/orderQuery")
     public CommonResult<OrderQueryDto> orderQuery(@RequestBody @Valid OrderQueryVo vo){
         try {
-            return CommonResult.success();
+            return CommonResult.success(payService.orderQuery(vo));
         }catch (BadBusinessException e){
             return CommonResult.fail(e.getStatus(), e.getMessage());
         }catch (Exception e){
