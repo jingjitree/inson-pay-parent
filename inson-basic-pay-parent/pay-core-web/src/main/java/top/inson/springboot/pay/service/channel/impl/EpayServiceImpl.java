@@ -69,19 +69,7 @@ public class EpayServiceImpl implements IChannelService {
                 payMethod = 6;
                 break;
         }
-
-        List<Map<String, Object>> goodsList = Lists.newArrayList(
-                MapUtil.builder(new HashMap<String, Object>())
-                        .put("name", payOrder.getBody())
-                        .put("number", RandomUtil.randomDouble(1, 10))
-                        .put("amount", amount)
-                        .build()
-        );
-        Map<String, Object> orderInfo = MapUtil.builder(new HashMap<String, Object>())
-                .put("Id", 1)
-                .put("businessType", 100007)
-                .put("goodsList", goodsList)
-                .build();
+        Map<String, Object> orderInfo = this.buildOrderInfo(payOrder);
 
         Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
                 .put("version", "3.0")
@@ -160,19 +148,7 @@ public class EpayServiceImpl implements IChannelService {
                 payMethod = 13;
                 break;
         }
-
-        List<Map<String, Object>> goodsList = Lists.newArrayList(
-                MapUtil.builder(new HashMap<String, Object>())
-                        .put("name", "测试商品")
-                        .put("number", "0.75")
-                        .put("amount", 1)
-                        .build()
-        );
-        Map<String, Object> orderInfo = MapUtil.builder(new HashMap<String, Object>())
-                .put("Id", 1)
-                .put("businessType", 100007)
-                .put("goodsList", goodsList)
-                .build();
+        Map<String, Object> orderInfo = this.buildOrderInfo(payOrder);
 
         Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
                 .put("outTradeNo", payOrder.getOrderNo())
@@ -224,7 +200,7 @@ public class EpayServiceImpl implements IChannelService {
             throw new BadBusinessException(PayBadBusinessEnum.CREATE_ORDER_FAIL);
         }
         String payState = bodyObj.get("payState").getAsString();
-        Integer orderStatus = PayOrderStatusEnum.PAYING.getCode();
+        int orderStatus;
         switch (payState){
             case "00":
                 orderStatus = PayOrderStatusEnum.PAY_SUCCESS.getCode();
@@ -260,6 +236,33 @@ public class EpayServiceImpl implements IChannelService {
 
     }
 
+    /**
+     * 构建订单信息
+     * @param payOrder
+     * @return
+     */
+    private Map<String, Object> buildOrderInfo(PayOrder payOrder) {
+        List<Map<String, Object>> goodsList = Lists.newArrayList(
+                MapUtil.builder(new HashMap<String, Object>())
+                        .put("name", payOrder.getBody())
+                        .put("number", RandomUtil.randomDouble(1, 10))
+                        .put("amount", AmountUtil.changeYuanToFen(payOrder.getPayAmount()))
+                        .build()
+        );
+        return MapUtil.builder(new HashMap<String, Object>())
+                .put("Id", 1)
+                .put("businessType", 100007)
+                .put("goodsList", goodsList)
+                .build();
+    }
+
+    /**
+     * 构建接口请求头并结算签名
+     * @param reqJson
+     * @param nowDateStr
+     * @return
+     * @throws Exception
+     */
     private Map<String, String> buildHeadersSign(String reqJson, String nowDateStr) throws Exception{
         Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())
                 .put("x-efps-sign-no", epayConfig.getCertNo())
