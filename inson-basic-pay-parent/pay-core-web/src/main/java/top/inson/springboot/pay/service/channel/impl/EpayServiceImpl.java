@@ -1,6 +1,7 @@
 package top.inson.springboot.pay.service.channel.impl;
 
 import cn.hutool.core.codec.Base64Encoder;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
@@ -10,7 +11,6 @@ import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.asymmetric.SignAlgorithm;
 import cn.hutool.http.HttpResponse;
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -242,7 +242,7 @@ public class EpayServiceImpl implements IChannelService {
      * @return
      */
     private Map<String, Object> buildOrderInfo(PayOrder payOrder) {
-        List<Map<String, Object>> goodsList = Lists.newArrayList(
+        List<Map<String, Object>> goodsList = CollUtil.newArrayList(
                 MapUtil.builder(new HashMap<String, Object>())
                         .put("name", payOrder.getBody())
                         .put("number", RandomUtil.randomDouble(1, 10))

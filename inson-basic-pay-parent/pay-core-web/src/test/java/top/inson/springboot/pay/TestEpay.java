@@ -1,6 +1,7 @@
 package top.inson.springboot.pay;
 
 import cn.hutool.core.codec.Base64Encoder;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
@@ -9,7 +10,6 @@ import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.asymmetric.SignAlgorithm;
 import cn.hutool.http.HttpResponse;
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.Map;
 @Slf4j
 public class TestEpay {
 
-    private Gson gson = new GsonBuilder().create();
+    private final Gson gson = new GsonBuilder().create();
 
     private String certNo = "562122003292960001";
     private String certPwd = "ttspay1608";
@@ -41,7 +41,7 @@ public class TestEpay {
         String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
 
         String orderNo = nowDateStr + RandomUtil.randomNumbers(9);
-        List<Map<String, Object>> goodsList = Lists.newArrayList(
+        List<Map<String, Object>> goodsList = CollUtil.newArrayList(
                 MapUtil.builder(new HashMap<String, Object>())
                         .put("name", "测试商品")
                         .put("number", "0.75")
@@ -88,7 +88,7 @@ public class TestEpay {
         String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
 
         String orderNo = RandomUtil.randomNumbers(18);
-        List<Map<String, Object>> goodsList = Lists.newArrayList(
+        List<Map<String, Object>> goodsList = CollUtil.newArrayList(
                 MapUtil.builder(new HashMap<String, Object>())
                         .put("name", "测试商品")
                         .put("number", "0.75")
