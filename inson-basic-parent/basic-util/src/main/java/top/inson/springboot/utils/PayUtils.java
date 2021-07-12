@@ -7,11 +7,16 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PayUtils {
-    public static final String WECHAT = "WECHAT";
-    public static final String ALIPAY = "ALIPAY";
+    public static final String WECHAT = "1";
+    public static final String ALIPAY = "2";
     public static final List<String> WECHAT_CODE = Arrays.asList("10", "11", "12", "13", "14", "15");
     public static final List<String> ALIPAY_CODE = Arrays.asList("25", "26", "27", "28", "29", "30");
 
+    /**
+     * 根据授权码判断支付方式
+     * @param authCode
+     * @return
+     */
     public static String getClientTypeByCode(String authCode){
         if (StrUtil.isBlank(authCode))
             return null;
@@ -23,6 +28,11 @@ public class PayUtils {
         return null;
     }
 
+    /**
+     * 根据请求头判断请求客户端类型
+     * @param request
+     * @return
+     */
     public static String getClientType(HttpServletRequest request){
         String userAgent = request.getHeader("user-agent");
         if (StrUtil.isBlank(userAgent))
