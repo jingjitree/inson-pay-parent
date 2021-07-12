@@ -12,10 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import top.inson.springboot.common.entity.response.CommonResult;
 import top.inson.springboot.common.exception.BadBusinessException;
 import top.inson.springboot.pay.annotation.PayCheckSign;
-import top.inson.springboot.pay.entity.dto.MicroPayDto;
-import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
-import top.inson.springboot.pay.entity.vo.MicroPayVo;
-import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
+import top.inson.springboot.pay.entity.dto.*;
+import top.inson.springboot.pay.entity.vo.*;
 import top.inson.springboot.pay.service.IPayService;
 import top.inson.springboot.utils.NetUtils;
 
@@ -68,25 +66,40 @@ public class PayController {
 
     @ApiOperation(value = "退款接口")
     @PostMapping("/refundOrder")
-    public CommonResult refundOrder(){
-
-        return CommonResult.success();
+    public CommonResult<RefundOrderDto> refundOrder(@RequestBody @Valid RefundOrderVo vo){
+        try {
+            return CommonResult.success();
+        }catch (BadBusinessException e){
+            return CommonResult.fail(e.getStatus(), e.getMessage());
+        }catch (Exception e){
+            return CommonResult.fail(0, e.getMessage());
+        }
     }
 
 
     @ApiOperation(value = "订单查询")
     @PostMapping("/orderQuery")
-    public CommonResult orderQuery(){
-
-        return CommonResult.success();
+    public CommonResult<OrderQueryDto> orderQuery(@RequestBody @Valid OrderQueryVo vo){
+        try {
+            return CommonResult.success();
+        }catch (BadBusinessException e){
+            return CommonResult.fail(e.getStatus(), e.getMessage());
+        }catch (Exception e){
+            return CommonResult.fail(0, e.getMessage());
+        }
     }
 
 
     @ApiOperation(value = "退款查询")
     @PostMapping("/refundQuery")
-    public CommonResult refundQuery(){
-
-        return CommonResult.success();
+    public CommonResult<RefundQueryDto> refundQuery(@RequestBody @Valid RefundQueryVo vo){
+        try {
+            return CommonResult.success();
+        }catch (BadBusinessException e){
+            return CommonResult.fail(e.getStatus(), e.getMessage());
+        }catch (Exception e){
+            return CommonResult.fail(0, e.getMessage());
+        }
     }
 
 }
