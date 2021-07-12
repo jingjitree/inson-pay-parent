@@ -35,7 +35,7 @@ public class PayOrder extends BaseEntity {
     private Integer payCategory;
     private String appid;
     private String openid;
-    private String authorCode;
+    private String authCode;
     private Integer orderStatus;
     private String orderDesc;
     private String notifyUrl;
