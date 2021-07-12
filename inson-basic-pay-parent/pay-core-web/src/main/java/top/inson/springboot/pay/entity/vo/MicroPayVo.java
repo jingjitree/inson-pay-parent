@@ -1,6 +1,7 @@
 package top.inson.springboot.pay.entity.vo;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -32,5 +33,12 @@ public class MicroPayVo extends PayBaseVo implements java.io.Serializable{
     @ApiModelProperty(value = "回调接收地址")
     @NotBlank(message = "回调地址不允许为空")
     private String notifyUrl;
+
+    @ApiModelProperty(value = "付款码")
+    @NotBlank(message = "付款码不能为空")
+    private String authCode;
+
+    @JsonIgnore
+    private Integer payType;
 
 }
