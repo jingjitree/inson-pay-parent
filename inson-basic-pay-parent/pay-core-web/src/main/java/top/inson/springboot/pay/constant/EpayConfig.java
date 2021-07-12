@@ -25,6 +25,8 @@ public class EpayConfig {
     private String baseUrl;
 
     private String unifiedUrl;
+    private String microPayUrl;
+
 
 
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import top.inson.springboot.common.entity.response.CommonResult;
 import top.inson.springboot.common.exception.BadBusinessException;
 import top.inson.springboot.pay.annotation.PayCheckSign;
+import top.inson.springboot.pay.entity.dto.MicroPayDto;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.entity.vo.MicroPayVo;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
@@ -52,9 +53,17 @@ public class PayController {
     @PayCheckSign
     @ApiOperation(value = "被扫接口")
     @PostMapping("/microPay")
-    public CommonResult microPay(@RequestBody @Valid MicroPayVo vo, HttpServletRequest request){
-        
-        return CommonResult.success();
+    public CommonResult<MicroPayDto> microPay(@RequestBody @Valid MicroPayVo vo, HttpServletRequest request){
+        String reqIp = NetUtils.getIp(request);
+        vo.setReqIp(reqIp);
+        log.debug("接口请求IP" + reqIp);
+        try {
+            return CommonResult.success(payService.microPay(vo));
+        }catch (BadBusinessException e){
+            return CommonResult.fail(e.getStatus(), e.getMessage());
+        }catch (Exception e){
+            return CommonResult.fail(0, e.getMessage());
+        }
     }
 
     @ApiOperation(value = "退款接口")

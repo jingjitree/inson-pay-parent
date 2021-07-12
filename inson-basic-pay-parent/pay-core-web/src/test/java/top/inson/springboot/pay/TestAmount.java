@@ -2,7 +2,9 @@ package top.inson.springboot.pay;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
+import top.inson.springboot.data.enums.PayTypeEnum;
 import top.inson.springboot.utils.AmountUtil;
+import top.inson.springboot.utils.PayUtils;
 
 @Slf4j
 public class TestAmount {
@@ -15,6 +17,16 @@ public class TestAmount {
 
         Integer fenAmount = AmountUtil.changeYuanToFen(yuanAmount);
         log.info("转换成分：" + fenAmount);
+    }
+
+    @Test
+    public void clientType(){
+        String clientType = PayUtils.getClientTypeByCode("28542536");
+        log.info("clientType: " + clientType);
+        PayTypeEnum en = PayTypeEnum.getCategory(Integer.parseInt(clientType));
+        log.info("en枚举：" + en);
+
+
     }
 
 }

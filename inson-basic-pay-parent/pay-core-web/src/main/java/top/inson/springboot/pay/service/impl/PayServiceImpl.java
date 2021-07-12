@@ -22,6 +22,8 @@ import top.inson.springboot.data.entity.MerChannelSetting;
 import top.inson.springboot.data.entity.PayOrder;
 import top.inson.springboot.data.enums.PayCategoryEnum;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
+import top.inson.springboot.data.enums.PayTypeEnum;
+import top.inson.springboot.pay.entity.dto.MicroPayDto;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.entity.vo.MicroPayVo;
 import top.inson.springboot.pay.entity.vo.UnifiedOrderVo;
@@ -31,6 +33,7 @@ import top.inson.springboot.pay.service.IPayService;
 import top.inson.springboot.pay.service.channel.IChannelService;
 import top.inson.springboot.pay.strategy.IStrategyService;
 import top.inson.springboot.utils.AmountUtil;
+import top.inson.springboot.utils.PayUtils;
 
 import java.math.BigDecimal;
 
@@ -98,12 +101,46 @@ public class PayServiceImpl implements IPayService {
 
 
     @Override
-    public UnifiedOrderDto microPay(MicroPayVo vo) {
+    public MicroPayDto microPay(MicroPayVo vo) {
+        MerCashier merCashier = payCacheService.getCashier(vo.getCashier());
+        String merchantNo = merCashier.getMerchantNo();
 
+        String clientType = PayUtils.getClientTypeByCode(vo.getAuthCode());
+        vo.setPayType(Integer.parseInt(clientType));
 
+        //构建支付订单
+        PayOrder payOrder = new PayOrder()
+                .setPayCategory(PayCategoryEnum.MICRO_PAY.getCode());
+        IChannelService channelService = this.validPayParam(vo.getMchOrderNo(), vo.getPayMoney(), vo.getPayType(),
+                merchantNo, payOrder);
+        //保存支付订单
+        BeanUtil.copyProperties(vo, payOrder);
+        this.savePayOrder(merchantNo, payOrder);
 
+        //查询渠道配置
+        Example subCofExample = new Example(ChannelSubmerConfig.class);
+        subCofExample.createCriteria()
+                .andEqualTo("channelNo", payOrder.getChannelNo())
+                .andEqualTo("merchantNo", payOrder.getMerchantNo())
+                .andEqualTo("payType", payOrder.getPayType());
+        ChannelSubmerConfig submerConfig = channelSubmerConfigMapper.selectOneByExample(subCofExample);
 
-        return null;
+        MicroPayDto payDto = channelService.microPay(payOrder, submerConfig);
+        if (payDto != null) {
+            Example example = new Example(PayOrder.class);
+            example.createCriteria()
+                    .andEqualTo("orderNo", payOrder.getOrderNo());
+            //请求成功，更新订单状态
+            PayOrder upOrder = new PayOrder()
+                    .setOrderStatus(payDto.getOrderStatus())
+                    .setOrderDesc(StrUtil.isBlank(payDto.getOrderDesc()) ? "下单成功" : payDto.getOrderDesc());
+            payOrderMapper.updateByExampleSelective(upOrder, example);
+            //设置接口返回参数
+            payOrder.setOrderStatus(upOrder.getOrderStatus())
+                    .setOrderDesc(upOrder.getOrderDesc());
+            BeanUtil.copyProperties(payOrder, payDto);
+        }
+        return payDto;
     }
 
     private IChannelService validPayParam(String mchOrderNo, Integer payMoney, Integer payType, String merchantNo, PayOrder payOrder) {
@@ -111,6 +148,8 @@ public class PayServiceImpl implements IPayService {
         if (BigDecimal.ZERO.compareTo(bigAmount) > 0) {
             throw new BadBusinessException(PayBadBusinessEnum.PAY_MONEY_ERROR);
         }
+        if (PayTypeEnum.getCategory(payType) == null)
+            throw new BadBusinessException(PayBadBusinessEnum.PAY_TYPE_ERROR);
 
         Example orderExample = new Example(PayOrder.class);
         orderExample.createCriteria()

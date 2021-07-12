@@ -26,6 +26,7 @@ import top.inson.springboot.data.enums.PayTypeEnum;
 import top.inson.springboot.pay.annotation.ChannelHandler;
 import top.inson.springboot.pay.constant.EpayConfig;
 import top.inson.springboot.pay.constant.PayConstant;
+import top.inson.springboot.pay.entity.dto.MicroPayDto;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
 import top.inson.springboot.pay.service.channel.IChannelService;
@@ -100,16 +101,7 @@ public class EpayServiceImpl implements IChannelService {
         JsonObject resultJson = new JsonObject();
         try {
             String reqUrl = epayConfig.getBaseUrl() + epayConfig.getUnifiedUrl();
-            Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())
-                    .put("x-efps-sign-no", epayConfig.getCertNo())
-                    .put("x-efps-sign-type", epayConfig.getSignType())
-                    .put("x-efps-timestamp", nowDateStr)
-                    .build();
-            //计算签名
-            Sign sign = SecureUtil.sign(SignAlgorithm.SHA256withRSA)
-                    .setPrivateKey(PFXUtil.getPrivateKeyByPfx(epayConfig.getCertPath(), epayConfig.getCertPwd()));
-            byte[] signByte = sign.sign(reqJson.getBytes(Charset.defaultCharset()));
-            headers.put("x-efps-sign", Base64Encoder.encode(signByte));
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
             //发送http请求
             response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
             resultJson.addProperty(PayConstant.STATUS, true);
@@ -149,14 +141,108 @@ public class EpayServiceImpl implements IChannelService {
         }
 
         //构建返回参数
-        return new UnifiedOrderDto()
-                .setOrderDesc(returnMsg)
+        UnifiedOrderDto orderDto = new UnifiedOrderDto()
                 .setCodeUrl(bodyObj.get("codeUrl").getAsString());
+        orderDto.setOrderDesc(returnMsg);
+        return orderDto;
     }
 
     @Override
-    public void microPay(PayOrder payOrder) {
+    public MicroPayDto microPay(PayOrder payOrder, ChannelSubmerConfig submerConfig) {
+        String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
+        Integer amount = AmountUtil.changeYuanToFen(payOrder.getPayAmount());
+        int payMethod;
+        switch (PayTypeEnum.getCategory(payOrder.getPayType())){
+            case ALIPAY:
+                payMethod = 14;
+                break;
+            default:
+                payMethod = 13;
+                break;
+        }
 
+        List<Map<String, Object>> goodsList = Lists.newArrayList(
+                MapUtil.builder(new HashMap<String, Object>())
+                        .put("name", "测试商品")
+                        .put("number", "0.75")
+                        .put("amount", 1)
+                        .build()
+        );
+        Map<String, Object> orderInfo = MapUtil.builder(new HashMap<String, Object>())
+                .put("Id", 1)
+                .put("businessType", 100007)
+                .put("goodsList", goodsList)
+                .build();
+
+        Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("outTradeNo", payOrder.getOrderNo())
+                .put("customerCode", submerConfig.getChannelSubMerNo())
+                .put("orderInfo", orderInfo)
+                .put("payMethod", payMethod)
+                .put("payAmount", amount)
+                .put("payCurrency","CNY")
+                .put("transactionStartTime", nowDateStr)
+                .put("authCode", payOrder.getAuthCode())
+                .put("nonceStr", RandomUtil.randomString(12))
+                .build();
+        String reqJson = gson.toJson(reqMap);
+        HttpResponse response = null;
+        JsonObject resultJson = new JsonObject();
+        try {
+            String reqUrl = epayConfig.getBaseUrl() + epayConfig.getMicroPayUrl();
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
+            response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
+            resultJson.addProperty(PayConstant.STATUS, true);
+        } catch (Exception e) {
+            log.error("被扫请求异常", e);
+            resultJson.addProperty(PayConstant.STATUS, false);
+        }
+        return this.doMicroPayResult(payOrder, resultJson, response);
+    }
+
+    private MicroPayDto doMicroPayResult(PayOrder payOrder, JsonObject resultJson, HttpResponse response) {
+        Example example = new Example(PayOrder.class);
+        example.createCriteria()
+                .andEqualTo("orderNo", payOrder.getOrderNo());
+        if (!resultJson.get(PayConstant.STATUS).getAsBoolean() || !response.isOk()){
+            //将订单改为支付失败
+            PayOrder upOrder = new PayOrder()
+                    .setOrderStatus(PayOrderStatusEnum.CREATE_ORDER_FAIL.getCode())
+                    .setOrderDesc("下单失败或请求失败");
+            payOrderMapper.updateByExampleSelective(upOrder, example);
+            throw new BadBusinessException(PayBadBusinessEnum.BUSINESS_ERROR);
+        }
+        String body = response.body();
+        log.info("被扫响应结果body:{}", body);
+        JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
+        String returnMsg = bodyObj.get("returnMsg").getAsString();
+        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
+            PayOrder upOrder = new PayOrder()
+                    .setOrderStatus(PayOrderStatusEnum.CREATE_ORDER_FAIL.getCode())
+                    .setOrderDesc(StrUtil.isBlank(returnMsg) ? "请求渠道下单失败" : returnMsg);
+            payOrderMapper.updateByExampleSelective(upOrder, example);
+            throw new BadBusinessException(PayBadBusinessEnum.CREATE_ORDER_FAIL);
+        }
+        String payState = bodyObj.get("payState").getAsString();
+        Integer orderStatus = PayOrderStatusEnum.PAYING.getCode();
+        switch (payState){
+            case "00":
+                orderStatus = PayOrderStatusEnum.PAY_SUCCESS.getCode();
+                break;
+            case "01":
+                orderStatus = PayOrderStatusEnum.PAY_FAIL.getCode();
+                break;
+            case "03":
+                orderStatus = PayOrderStatusEnum.PAYING.getCode();
+                break;
+            default:
+                orderStatus = PayOrderStatusEnum.PAY_CANCEL.getCode();
+                break;
+        }
+        MicroPayDto payDto = new MicroPayDto();
+        payDto.setOrderStatus(orderStatus)
+                .setOrderDesc(returnMsg);
+        return payDto;
     }
 
     @Override
@@ -172,5 +258,19 @@ public class EpayServiceImpl implements IChannelService {
     @Override
     public void refundQuery() {
 
+    }
+
+    private Map<String, String> buildHeadersSign(String reqJson, String nowDateStr) throws Exception{
+        Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())
+                .put("x-efps-sign-no", epayConfig.getCertNo())
+                .put("x-efps-sign-type", epayConfig.getSignType())
+                .put("x-efps-timestamp", nowDateStr)
+                .build();
+        //计算签名
+        Sign sign = SecureUtil.sign(SignAlgorithm.SHA256withRSA)
+                .setPrivateKey(PFXUtil.getPrivateKeyByPfx(epayConfig.getCertPath(), epayConfig.getCertPwd()));
+        byte[] signByte = sign.sign(reqJson.getBytes(Charset.defaultCharset()));
+        headers.put("x-efps-sign", Base64Encoder.encode(signByte));
+        return headers;
     }
 }
