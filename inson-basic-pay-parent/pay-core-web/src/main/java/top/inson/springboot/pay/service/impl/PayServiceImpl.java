@@ -81,18 +81,8 @@ public class PayServiceImpl implements IPayService {
 
         UnifiedOrderDto unifiedDto = channelService.unifiedOrder(payOrder, submerConfig);
         if (unifiedDto != null){
-            Example example = new Example(PayOrder.class);
-            example.createCriteria()
-                    .andEqualTo("orderNo", payOrder.getOrderNo());
-            //请求成功，更新订单状态
-            PayOrder upOrder = new PayOrder()
-                    .setOrderStatus(PayOrderStatusEnum.PAYING.getCode())
-                    .setOrderDesc(StrUtil.isBlank(unifiedDto.getOrderDesc()) ? "下单成功" : unifiedDto.getOrderDesc());
-            payOrderMapper.updateByExampleSelective(upOrder, example);
-            //设置接口返回参数
-            payOrder.setOrderStatus(upOrder.getOrderStatus())
-                    .setOrderDesc(upOrder.getOrderDesc());
-            BeanUtil.copyProperties(payOrder, unifiedDto);
+            PayOrder newOrder = this.upPayOrder(unifiedDto, payOrder.getOrderNo());
+            BeanUtil.copyProperties(newOrder, unifiedDto);
         }
         return unifiedDto;
     }
@@ -125,18 +115,8 @@ public class PayServiceImpl implements IPayService {
 
         MicroPayDto payDto = channelService.microPay(payOrder, submerConfig);
         if (payDto != null) {
-            Example example = new Example(PayOrder.class);
-            example.createCriteria()
-                    .andEqualTo("orderNo", payOrder.getOrderNo());
-            //请求成功，更新订单状态
-            PayOrder upOrder = new PayOrder()
-                    .setOrderStatus(payDto.getOrderStatus())
-                    .setOrderDesc(StrUtil.isBlank(payDto.getOrderDesc()) ? "下单成功" : payDto.getOrderDesc());
-            payOrderMapper.updateByExampleSelective(upOrder, example);
-            //设置接口返回参数
-            payOrder.setOrderStatus(upOrder.getOrderStatus())
-                    .setOrderDesc(upOrder.getOrderDesc());
-            BeanUtil.copyProperties(payOrder, payDto);
+            PayOrder newOrder = this.upPayOrder(payDto, payOrder.getOrderNo());
+            BeanUtil.copyProperties(newOrder, payDto);
         }
         return payDto;
     }
@@ -165,19 +145,9 @@ public class PayServiceImpl implements IPayService {
 
         OrderQueryDto queryDto = channelService.orderQuery(payOrder, submerConfig);
         if (queryDto != null){
-            Example example = new Example(PayOrder.class);
-            example.createCriteria()
-                    .andEqualTo("orderNo", payOrder.getOrderNo());
-            //请求成功，更新订单状态
-            PayOrder upOrder = new PayOrder()
-                    .setOrderStatus(queryDto.getOrderStatus())
-                    .setChOrderNo(queryDto.getChOrderNo())
-                    .setOrderDesc(queryDto.getOrderDesc());
-            payOrderMapper.updateByExampleSelective(upOrder, example);
+            PayOrder newOrder = this.upPayOrder(queryDto, payOrder.getOrderNo());
             //设置接口返回参数
-            payOrder.setOrderStatus(upOrder.getOrderStatus())
-                    .setOrderDesc(upOrder.getOrderDesc());
-            BeanUtil.copyProperties(payOrder, queryDto);
+            BeanUtil.copyProperties(newOrder, queryDto);
         }
         return queryDto;
     }
@@ -249,4 +219,17 @@ public class PayServiceImpl implements IPayService {
 
     }
 
+    private PayOrder upPayOrder(PayBaseDto baseDto, String orderNo) {
+        Example example = new Example(PayOrder.class);
+        example.createCriteria()
+                .andEqualTo("orderNo", orderNo);
+        //请求成功，更新订单状态
+        PayOrder upOrder = new PayOrder();
+        BeanUtil.copyProperties(baseDto, upOrder);
+        if (StrUtil.isNotBlank(upOrder.getOrderNo()))
+            upOrder.setOrderNo(null);
+        log.info("更新订单参数upOrder：{}", gson.toJson(upOrder));
+        payOrderMapper.updateByExampleSelective(upOrder, example);
+        return payOrderMapper.selectOneByExample(example);
+    }
 }
