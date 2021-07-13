@@ -33,12 +33,12 @@ public class TestEpay {
     private String certPwd = "ttspay1608";
     private String certPath = "D:/home/certs/epaylink/user-rsa.pfx";
     private String customerCode = "562122003292960";
+    private String baseUrl = "https://efps.epaylinks.cn";
+    String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
 
     @Test
     public void unifiedOrder(){
-        String baseUrl = "https://efps.epaylinks.cn";
         String reqUrl = baseUrl + "/api/txs/pay/NativePayment";
-        String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
 
         String orderNo = nowDateStr + RandomUtil.randomNumbers(9);
         List<Map<String, Object>> goodsList = CollUtil.newArrayList(
@@ -83,9 +83,7 @@ public class TestEpay {
 
     @Test
     public void microPay(){
-        String baseUrl = "https://efps.epaylinks.cn";
         String reqUrl = baseUrl + "/api/txs/pay/MicroPayment";
-        String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
 
         String orderNo = RandomUtil.randomNumbers(18);
         List<Map<String, Object>> goodsList = CollUtil.newArrayList(
@@ -124,6 +122,26 @@ public class TestEpay {
         }
 
     }
+
+    @Test
+    public void orderQuery(){
+        String reqUrl = baseUrl + "/api/txs/pay/PaymentQuery";
+        Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("customerCode", customerCode)
+                .put("outTradeNo", "20210712171546172758128162")
+                .put("nonceStr", RandomUtil.randomString(12))
+                .build();
+        String reqJson = gson.toJson(reqMap);
+        try {
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
+            HttpResponse response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
+            log.info("body：" + response.body());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     private Map<String, String> buildHeadersSign(String reqJson, String nowDateStr) throws Exception{
         Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())

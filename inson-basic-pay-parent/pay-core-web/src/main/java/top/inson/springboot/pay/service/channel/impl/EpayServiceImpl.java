@@ -27,6 +27,7 @@ import top.inson.springboot.pay.annotation.ChannelHandler;
 import top.inson.springboot.pay.constant.EpayConfig;
 import top.inson.springboot.pay.constant.PayConstant;
 import top.inson.springboot.pay.entity.dto.MicroPayDto;
+import top.inson.springboot.pay.entity.dto.OrderQueryDto;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
 import top.inson.springboot.pay.service.channel.IChannelService;
@@ -227,8 +228,58 @@ public class EpayServiceImpl implements IChannelService {
     }
 
     @Override
-    public void orderQuery() {
+    public OrderQueryDto orderQuery(PayOrder payOrder, ChannelSubmerConfig submerConfig) {
+        String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
+        Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("customerCode", submerConfig.getChannelSubMerNo())
+                .put("outTradeNo", payOrder.getOrderNo())
+                .put("nonceStr", RandomUtil.randomString(12))
+                .build();
+        String reqJson = gson.toJson(reqMap);
+        JsonObject resultJson = new JsonObject();
+        HttpResponse response = null;
+        try {
+            String reqUrl = epayConfig.getBaseUrl() + epayConfig.getOrderQueryUrl();
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
+            response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
+            resultJson.addProperty(PayConstant.STATUS, true);
+        } catch (Exception e) {
+            log.error("订单查询异常", e);
+            resultJson.addProperty(PayConstant.STATUS, false);
+        }
+        return this.doOrderQueryResult(payOrder, resultJson, response);
+    }
 
+    private OrderQueryDto doOrderQueryResult(PayOrder payOrder, JsonObject resultJson, HttpResponse response) {
+        if (!resultJson.get(PayConstant.STATUS).getAsBoolean() || !response.isOk())
+            throw new BadBusinessException(PayBadBusinessEnum.SEND_REQUEST_ERROR);
+        String body = response.body();
+        log.info("易票联订单查询结果：{}", body);
+        JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
+        if (!"0000".equals(bodyObj.get("returnCode").getAsString()))
+            throw new BadBusinessException(PayBadBusinessEnum.SEND_REQUEST_ERROR);
+        String payState = bodyObj.get("payState").getAsString();
+        int orderStatus;
+        switch (payState){
+            case "00":
+                orderStatus = PayOrderStatusEnum.PAY_SUCCESS.getCode();
+                break;
+            case "01":
+                orderStatus = PayOrderStatusEnum.PAY_FAIL.getCode();
+                break;
+            case "03":
+                orderStatus = PayOrderStatusEnum.PAYING.getCode();
+                break;
+            default:
+                orderStatus = PayOrderStatusEnum.PAY_CANCEL.getCode();
+                break;
+        }
+
+        OrderQueryDto queryDto = new OrderQueryDto();
+        queryDto.setOrderStatus(orderStatus)
+                .setOrderDesc(bodyObj.get("returnMsg").getAsString())
+                .setChOrderNo(bodyObj.get("transactionNo").getAsString());
+        return queryDto;
     }
 
     @Override

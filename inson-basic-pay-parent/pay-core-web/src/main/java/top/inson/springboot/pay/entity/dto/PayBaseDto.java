@@ -1,6 +1,7 @@
 package top.inson.springboot.pay.entity.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,5 +28,11 @@ public class PayBaseDto implements java.io.Serializable{
 
     @ApiModelProperty(value = "订单金额（单位：分）")
     private Integer payAmount;
+
+    @JsonIgnore
+    private String chOrderNo;
+
+    @JsonIgnore
+    private String preChOrderNo;
 
 }

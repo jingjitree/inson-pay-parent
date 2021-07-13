@@ -77,6 +77,7 @@ public class PayController {
     }
 
 
+    @PayCheckSign
     @ApiOperation(value = "订单查询")
     @PostMapping("/orderQuery")
     public CommonResult<OrderQueryDto> orderQuery(@RequestBody @Valid OrderQueryVo vo){

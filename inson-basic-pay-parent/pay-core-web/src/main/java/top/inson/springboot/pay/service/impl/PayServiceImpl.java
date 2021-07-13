@@ -148,7 +148,54 @@ public class PayServiceImpl implements IPayService {
 
     @Override
     public OrderQueryDto orderQuery(OrderQueryVo vo) {
-        return null;
+        PayOrder payOrder = this.validPayOrder(vo.getCashier(), vo.getOrderNo(), vo.getMchOrderNo());
+        log.info("订单查询orderNo：" + payOrder.getOrderNo());
+        //根据订单标识获取渠道
+        IChannelService channelService = strategyService.getChannelService(payOrder.getChannelNo());
+        if (channelService == null)
+            throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_EXISTS);
+
+        //查询渠道配置
+        Example subCofExample = new Example(ChannelSubmerConfig.class);
+        subCofExample.createCriteria()
+                .andEqualTo("channelNo", payOrder.getChannelNo())
+                .andEqualTo("merchantNo", payOrder.getMerchantNo())
+                .andEqualTo("payType", payOrder.getPayType());
+        ChannelSubmerConfig submerConfig = channelSubmerConfigMapper.selectOneByExample(subCofExample);
+
+        OrderQueryDto queryDto = channelService.orderQuery(payOrder, submerConfig);
+        if (queryDto != null){
+            Example example = new Example(PayOrder.class);
+            example.createCriteria()
+                    .andEqualTo("orderNo", payOrder.getOrderNo());
+            //请求成功，更新订单状态
+            PayOrder upOrder = new PayOrder()
+                    .setOrderStatus(queryDto.getOrderStatus())
+                    .setChOrderNo(queryDto.getChOrderNo())
+                    .setOrderDesc(queryDto.getOrderDesc());
+            payOrderMapper.updateByExampleSelective(upOrder, example);
+            //设置接口返回参数
+            payOrder.setOrderStatus(upOrder.getOrderStatus())
+                    .setOrderDesc(upOrder.getOrderDesc());
+            BeanUtil.copyProperties(payOrder, queryDto);
+        }
+        return queryDto;
+    }
+
+    private PayOrder validPayOrder(String cashier, String orderNo, String mchOrderNo) {
+        Example orderExample = new Example(PayOrder.class);
+        Example.Criteria criteria = orderExample.createCriteria()
+                .andEqualTo("cashier", cashier);
+        if (StrUtil.isNotBlank(orderNo))
+            criteria.andEqualTo("orderNo", orderNo);
+        else if (StrUtil.isNotBlank(mchOrderNo))
+            criteria.andEqualTo("mchOrderNo", mchOrderNo);
+        else
+            throw new BadBusinessException(PayBadBusinessEnum.MUST_SEND_ORDER_NO);
+        PayOrder payOrder = payOrderMapper.selectOneByExample(orderExample);
+        if (payOrder == null)
+            throw new BadBusinessException(PayBadBusinessEnum.ORDER_NOT_EXISTS);
+        return payOrder;
     }
 
     @Override
