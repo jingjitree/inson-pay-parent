@@ -79,8 +79,8 @@ public class PayServiceImpl implements IPayService {
         UnifiedOrderDto unifiedDto = channelService.unifiedOrder(payOrder, submerConfig);
         if (unifiedDto != null){
             PayOrder newOrder = this.upPayOrder(unifiedDto, payOrder.getOrderNo());
-            unifiedDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
             BeanUtil.copyProperties(newOrder, unifiedDto);
+            unifiedDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
         }
         return unifiedDto;
     }
@@ -114,8 +114,8 @@ public class PayServiceImpl implements IPayService {
         MicroPayDto payDto = channelService.microPay(payOrder, submerConfig);
         if (payDto != null) {
             PayOrder newOrder = this.upPayOrder(payDto, payOrder.getOrderNo());
-            payDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
             BeanUtil.copyProperties(newOrder, payDto);
+            payDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
         }
         return payDto;
     }
@@ -140,8 +140,8 @@ public class PayServiceImpl implements IPayService {
         RefundOrderDto refundDto = channelService.refundOrder(refundOrder, submerConfig);
         if (refundDto != null){
             RefundOrder newOrder = this.upRefundOrder(refundDto, refundOrder.getRefundNo());
-            refundDto.setRefundMoney(AmountUtil.changeYuanToFen(newOrder.getRefundAmount()));
             BeanUtil.copyProperties(newOrder, refundDto);
+            refundDto.setRefundMoney(AmountUtil.changeYuanToFen(newOrder.getRefundAmount()));
         }
         return refundDto;
     }

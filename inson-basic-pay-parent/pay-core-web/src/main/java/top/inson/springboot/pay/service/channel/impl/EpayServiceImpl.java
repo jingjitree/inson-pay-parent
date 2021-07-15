@@ -128,13 +128,14 @@ public class EpayServiceImpl implements IChannelService {
         JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
         String returnMsg = bodyObj.get("returnMsg").getAsString();
         //返回参数
-        UnifiedOrderDto orderDto = new UnifiedOrderDto()
+        UnifiedOrderDto orderDto = new UnifiedOrderDto();
         if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
             orderDto.setOrderStatus(PayOrderStatusEnum.CREATE_ORDER_FAIL.getCode())
                     .setOrderDesc(StrUtil.isBlank(returnMsg) ? "请求渠道下单失败" : returnMsg);
         }else {
             //构建返回参数
             orderDto.setCodeUrl(bodyObj.get("codeUrl").getAsString())
+                    .setOrderStatus(PayOrderStatusEnum.PAYING.getCode())
                     .setOrderDesc(returnMsg);
         }
         return orderDto;
