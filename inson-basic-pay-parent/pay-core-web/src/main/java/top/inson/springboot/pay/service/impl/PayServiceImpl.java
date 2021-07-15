@@ -140,6 +140,17 @@ public class PayServiceImpl implements IPayService {
         RefundOrderDto refundDto = channelService.refundOrder(refundOrder, submerConfig);
         if (refundDto != null){
             RefundOrder newOrder = this.upRefundOrder(refundDto, refundOrder.getRefundNo());
+            RefundStatusEnum category = RefundStatusEnum.getCategory(newOrder.getRefundStatus());
+            if (RefundStatusEnum.REFUNDING == category
+                    || RefundStatusEnum.REFUND_SUCCESS == category){
+                //退款申请成功
+                PayOrder upOrder = new PayOrder()
+                        .setAllRefundAmount(payOrder.getAllRefundAmount());
+                Example example = new Example(PayOrder.class);
+                example.createCriteria()
+                        .andEqualTo("orderNo", payOrder.getOrderNo());
+                payOrderMapper.updateByExampleSelective(upOrder, example);
+            }
             BeanUtil.copyProperties(newOrder, refundDto);
             refundDto.setRefundMoney(AmountUtil.changeYuanToFen(newOrder.getRefundAmount()));
         }
