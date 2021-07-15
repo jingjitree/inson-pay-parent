@@ -20,4 +20,9 @@ public class BadBusinessException extends RuntimeException{
         this.status = business.getCode();
     }
 
+    public BadBusinessException(Integer status, String desc){
+        super(desc);
+        this.status = status;
+    }
+
 }
