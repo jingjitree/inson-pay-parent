@@ -64,11 +64,12 @@ public class PayController {
         }
     }
 
+    @PayCheckSign
     @ApiOperation(value = "退款接口")
     @PostMapping("/refundOrder")
     public CommonResult<RefundOrderDto> refundOrder(@RequestBody @Valid RefundOrderVo vo){
         try {
-            return CommonResult.success();
+            return CommonResult.success(payService.refundOrder(vo));
         }catch (BadBusinessException e){
             return CommonResult.fail(e.getStatus(), e.getMessage());
         }catch (Exception e){

@@ -142,6 +142,29 @@ public class TestEpay {
 
     }
 
+    @Test
+    public void refundOrder(){
+        String reqUrl = baseUrl + "/api/txs/pay/Refund/V2";
+        String orderNo = "20210712171546172758128162";
+        Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("customerCode", customerCode)
+                .put("outRefundNo", RandomUtil.randomNumbers(13))
+                .put("outTradeNo", orderNo)
+                .put("refundAmount", 1)
+                .put("amount", 1)
+                .put("nonceStr", RandomUtil.randomString(12))
+                .build();
+        String reqJson = gson.toJson(reqMap);
+        try {
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
+            HttpResponse response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
+            log.info("退款接口响应body: " + response.body());
+        }catch (Exception e){
+
+        }
+
+    }
+
 
     private Map<String, String> buildHeadersSign(String reqJson, String nowDateStr) throws Exception{
         Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())

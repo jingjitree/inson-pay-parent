@@ -18,6 +18,7 @@ public enum PayBadBusinessEnum implements IBadBusiness {
     PAY_TYPE_ERROR(1104,"不支持的支付方式"),
     ORDER_NOT_EXISTS(1105,"订单不存在"),
     MUST_SEND_ORDER_NO(1106,"必须上送订单编号"),
+    ORDER_NOT_ALLOW_REFUND(1107, "订单不允许退款"),
 
 
     BUSINESS_ERROR(2001,"支付业务出错"),

@@ -123,6 +123,26 @@ public class PayServiceImpl implements IPayService {
 
     @Override
     public RefundOrderDto refundOrder(RefundOrderVo vo) {
+        PayOrder payOrder = this.validPayOrder(vo.getCashier(), vo.getOrderNo(), null);
+        PayOrderStatusEnum statusEnum = PayOrderStatusEnum.getCategory(payOrder.getOrderStatus());
+        if (statusEnum != PayOrderStatusEnum.PAY_SUCCESS
+                && statusEnum != PayOrderStatusEnum.PARTIAL_REFUND)
+            throw new BadBusinessException(PayBadBusinessEnum.ORDER_NOT_ALLOW_REFUND);
+
+        //根据订单标识获取渠道
+        IChannelService channelService = strategyService.getChannelService(payOrder.getChannelNo());
+        if (channelService == null)
+            throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_EXISTS);
+
+        //查询渠道配置
+        Example subCofExample = new Example(ChannelSubmerConfig.class);
+        subCofExample.createCriteria()
+                .andEqualTo("channelNo", payOrder.getChannelNo())
+                .andEqualTo("merchantNo", payOrder.getMerchantNo())
+                .andEqualTo("payType", payOrder.getPayType());
+        ChannelSubmerConfig submerConfig = channelSubmerConfigMapper.selectOneByExample(subCofExample);
+
+        channelService.refundOrder();
         return null;
     }
 
