@@ -17,7 +17,7 @@ public class RefundOrderDto implements java.io.Serializable{
     private String refundNo;
 
     @ApiModelProperty(value = "退款订单号")
-    private String mchRefundOrder;
+    private String mchRefundNo;
 
     @ApiModelProperty(value = "退款金额")
     private Integer refundMoney;

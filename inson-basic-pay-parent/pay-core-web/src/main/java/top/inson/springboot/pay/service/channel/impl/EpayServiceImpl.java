@@ -16,7 +16,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.common.exception.BadBusinessException;
 import top.inson.springboot.data.dao.IPayOrderMapper;
@@ -128,18 +127,16 @@ public class EpayServiceImpl implements IChannelService {
         //主扫响应结果body:{"returnCode":"0000","returnMsg":"Success","nonceStr":"2c1653f9142343a9bc2b1c0dec527098","codeUrl":"https://epsp.epaylinks.cn/api/cash/cashier?token=9e0faf56d27a4454a669af2abb86f1a8","outTradeNo":null,"amount":1}
         JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
         String returnMsg = bodyObj.get("returnMsg").getAsString();
-        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
-            PayOrder upOrder = new PayOrder()
-                    .setOrderStatus(PayOrderStatusEnum.CREATE_ORDER_FAIL.getCode())
-                    .setOrderDesc(StrUtil.isBlank(returnMsg) ? "请求渠道下单失败" : returnMsg);
-            payOrderMapper.updateByExampleSelective(upOrder, example);
-            throw new BadBusinessException(PayBadBusinessEnum.CREATE_ORDER_FAIL);
-        }
-
-        //构建返回参数
+        //返回参数
         UnifiedOrderDto orderDto = new UnifiedOrderDto()
-                .setCodeUrl(bodyObj.get("codeUrl").getAsString());
-        orderDto.setOrderDesc(returnMsg);
+        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
+            orderDto.setOrderStatus(PayOrderStatusEnum.CREATE_ORDER_FAIL.getCode())
+                    .setOrderDesc(StrUtil.isBlank(returnMsg) ? "请求渠道下单失败" : returnMsg);
+        }else {
+            //构建返回参数
+            orderDto.setCodeUrl(bodyObj.get("codeUrl").getAsString())
+                    .setOrderDesc(returnMsg);
+        }
         return orderDto;
     }
 
@@ -200,32 +197,31 @@ public class EpayServiceImpl implements IChannelService {
         log.info("被扫响应结果body:{}", body);
         JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
         String returnMsg = bodyObj.get("returnMsg").getAsString();
-        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
-            PayOrder upOrder = new PayOrder()
-                    .setOrderStatus(PayOrderStatusEnum.CREATE_ORDER_FAIL.getCode())
-                    .setOrderDesc(StrUtil.isBlank(returnMsg) ? "请求渠道下单失败" : returnMsg);
-            payOrderMapper.updateByExampleSelective(upOrder, example);
-            throw new BadBusinessException(PayBadBusinessEnum.CREATE_ORDER_FAIL);
-        }
-        String payState = bodyObj.get("payState").getAsString();
-        int orderStatus;
-        switch (payState){
-            case "00":
-                orderStatus = PayOrderStatusEnum.PAY_SUCCESS.getCode();
-                break;
-            case "01":
-                orderStatus = PayOrderStatusEnum.PAY_FAIL.getCode();
-                break;
-            case "03":
-                orderStatus = PayOrderStatusEnum.PAYING.getCode();
-                break;
-            default:
-                orderStatus = PayOrderStatusEnum.PAY_CANCEL.getCode();
-                break;
-        }
+        //返回参数
         MicroPayDto payDto = new MicroPayDto();
-        payDto.setOrderStatus(orderStatus)
-                .setOrderDesc(returnMsg);
+        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
+            payDto.setOrderStatus(PayOrderStatusEnum.CREATE_ORDER_FAIL.getCode())
+                    .setOrderDesc(StrUtil.isBlank(returnMsg) ? "请求渠道下单失败" : returnMsg);
+        }else {
+            String payState = bodyObj.get("payState").getAsString();
+            int orderStatus;
+            switch (payState) {
+                case "00":
+                    orderStatus = PayOrderStatusEnum.PAY_SUCCESS.getCode();
+                    break;
+                case "01":
+                    orderStatus = PayOrderStatusEnum.PAY_FAIL.getCode();
+                    break;
+                case "03":
+                    orderStatus = PayOrderStatusEnum.PAYING.getCode();
+                    break;
+                default:
+                    orderStatus = PayOrderStatusEnum.PAY_CANCEL.getCode();
+                    break;
+            }
+            payDto.setOrderStatus(orderStatus)
+                    .setOrderDesc(returnMsg);
+        }
         return payDto;
     }
 
@@ -277,17 +273,16 @@ public class EpayServiceImpl implements IChannelService {
         log.info("退款响应body: {}", body);
         JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
         String returnMsg = bodyObj.get("returnMsg").getAsString();
+        //返回参数
+        RefundOrderDto orderDto = new RefundOrderDto();
         if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
-            RefundOrder upOrder = new RefundOrder()
-                    .setRefundStatus(RefundStatusEnum.REFUND_FAIL.getCode())
+            orderDto.setRefundStatus(RefundStatusEnum.REFUND_FAIL.getCode())
                     .setRefundDesc(StrUtil.isBlank(returnMsg) ? "请求退款失败" : returnMsg);
-            refundOrderMapper.updateByExampleSelective(upOrder, example);
-            throw new BadBusinessException(HttpStatus.BAD_REQUEST.value(), upOrder.getRefundDesc());
+        }else {
+            orderDto.setRefundStatus(RefundStatusEnum.REFUNDING.getCode())
+                    .setRefundDesc(RefundStatusEnum.REFUNDING.getDesc());
         }
-
-        return new RefundOrderDto()
-                .setRefundStatus(RefundStatusEnum.REFUNDING.getCode())
-                .setRefundDesc(RefundStatusEnum.REFUNDING.getDesc());
+        return orderDto;
     }
 
     @Override
