@@ -17,6 +17,16 @@ public enum PayOrderStatusEnum {
     CREATE_ORDER_FAIL(8,"下单失败"),
     ;
 
+    public static PayOrderStatusEnum getCategory(Integer code){
+        if (code == null)
+            return null;
+        for (PayOrderStatusEnum en : PayOrderStatusEnum.values()) {
+            if (code.equals(en.getCode()))
+                return en;
+        }
+        return null;
+    }
+
     private final int code;
     private final String desc;
 }
