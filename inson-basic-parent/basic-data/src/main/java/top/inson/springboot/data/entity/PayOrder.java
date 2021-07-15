@@ -39,7 +39,7 @@ public class PayOrder extends BaseEntity {
     private Integer orderStatus;
     private String orderDesc;
     private String notifyUrl;
-    private BigDecimal refundAmount;
+    private BigDecimal allRefundAmount;
     private Date payTime;
     private String reqIp;
     private String remark;

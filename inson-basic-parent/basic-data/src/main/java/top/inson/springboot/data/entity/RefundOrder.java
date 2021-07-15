@@ -20,7 +20,10 @@ public class RefundOrder extends BaseEntity {
     private String mchRefundNo;
     private BigDecimal refundAmount;
     private Integer refundStatus;
+    private String refundDesc;
     private String merchantNo;
+    private String channelNo;
     private Date refundTime;
+    private String notifyUrl;
 
 }
