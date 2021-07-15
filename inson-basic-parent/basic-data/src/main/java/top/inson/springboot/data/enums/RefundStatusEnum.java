@@ -14,6 +14,16 @@ public enum RefundStatusEnum {
     REFUND_FAIL(4,"退款失败"),
     ;
 
+    public static RefundStatusEnum getCategory(Integer code){
+        if (code == null)
+            return null;
+        for (RefundStatusEnum en : RefundStatusEnum.values()) {
+            if (code.equals(en.getCode()))
+                return en;
+        }
+        return null;
+    }
+
     private final int code;
     private final String desc;
 }
