@@ -16,18 +16,23 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.common.exception.BadBusinessException;
 import top.inson.springboot.data.dao.IPayOrderMapper;
+import top.inson.springboot.data.dao.IRefundOrderMapper;
 import top.inson.springboot.data.entity.ChannelSubmerConfig;
 import top.inson.springboot.data.entity.PayOrder;
+import top.inson.springboot.data.entity.RefundOrder;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.data.enums.PayTypeEnum;
+import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.pay.annotation.ChannelHandler;
 import top.inson.springboot.pay.constant.EpayConfig;
 import top.inson.springboot.pay.constant.PayConstant;
 import top.inson.springboot.pay.entity.dto.MicroPayDto;
 import top.inson.springboot.pay.entity.dto.OrderQueryDto;
+import top.inson.springboot.pay.entity.dto.RefundOrderDto;
 import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
 import top.inson.springboot.pay.service.channel.IChannelService;
@@ -47,6 +52,8 @@ import java.util.Map;
 public class EpayServiceImpl implements IChannelService {
     @Autowired
     private IPayOrderMapper payOrderMapper;
+    @Autowired
+    private IRefundOrderMapper refundOrderMapper;
 
 
     @Autowired
@@ -223,8 +230,64 @@ public class EpayServiceImpl implements IChannelService {
     }
 
     @Override
-    public void refundOrder() {
+    public RefundOrderDto refundOrder(RefundOrder refundOrder, ChannelSubmerConfig submerConfig) {
+        String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
+        Example orderExample = new Example(PayOrder.class);
+        orderExample.createCriteria()
+                .andEqualTo("orderNo", refundOrder.getPayOrderNo());
+        PayOrder payOrder = payOrderMapper.selectOneByExample(orderExample);
 
+        Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("customerCode", submerConfig.getChannelSubMerNo())
+                .put("outRefundNo", RandomUtil.randomNumbers(13))
+                .put("outTradeNo", payOrder.getOrderNo())
+                .put("refundAmount", AmountUtil.changeYuanToFen(refundOrder.getRefundAmount()))
+                .put("amount", AmountUtil.changeYuanToFen(payOrder.getPayAmount()))
+                .put("nonceStr", RandomUtil.randomString(12))
+                .build();
+        String reqJson = gson.toJson(reqMap);
+        JsonObject resultJson = new JsonObject();
+        HttpResponse response = null;
+        try {
+            String reqUrl = epayConfig.getBaseUrl() + epayConfig.getRefundOrderUrl();
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
+            response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
+            resultJson.addProperty(PayConstant.STATUS, true);
+        }catch (Exception e){
+            log.error("易票联退款异常", e);
+            resultJson.addProperty(PayConstant.STATUS, false);
+        }
+
+        return this.doRefundOrderResult(refundOrder, resultJson, response);
+    }
+
+    private RefundOrderDto doRefundOrderResult(RefundOrder refundOrder, JsonObject resultJson, HttpResponse response) {
+        Example example = new Example(RefundOrder.class);
+        example.createCriteria()
+                .andEqualTo("refundNo", refundOrder.getRefundNo());
+        if (!resultJson.get(PayConstant.STATUS).getAsBoolean() || !response.isOk()){
+            //将订单改为支付失败
+            RefundOrder upOrder = new RefundOrder()
+                    .setRefundStatus(RefundStatusEnum.REFUND_FAIL.getCode())
+                    .setRefundDesc("退款失败或请求失败");
+            refundOrderMapper.updateByExampleSelective(upOrder, example);
+            throw new BadBusinessException(PayBadBusinessEnum.BUSINESS_ERROR);
+        }
+        String body = response.body();
+        log.info("退款响应body: {}", body);
+        JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
+        String returnMsg = bodyObj.get("returnMsg").getAsString();
+        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
+            RefundOrder upOrder = new RefundOrder()
+                    .setRefundStatus(RefundStatusEnum.REFUND_FAIL.getCode())
+                    .setRefundDesc(StrUtil.isBlank(returnMsg) ? "请求退款失败" : returnMsg);
+            refundOrderMapper.updateByExampleSelective(upOrder, example);
+            throw new BadBusinessException(HttpStatus.BAD_REQUEST.value(), upOrder.getRefundDesc());
+        }
+
+        return new RefundOrderDto()
+                .setRefundStatus(RefundStatusEnum.REFUNDING.getCode())
+                .setRefundDesc(RefundStatusEnum.REFUNDING.getDesc());
     }
 
     @Override

@@ -5,7 +5,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -18,6 +20,15 @@ public class RefundOrderVo extends PayBaseVo implements java.io.Serializable{
 
     @ApiModelProperty(value = "退款订单号")
     @NotBlank(message = "退款订单号不能为空")
-    private String mchRefundOrder;
+    private String mchRefundNo;
+
+    @ApiModelProperty(value = "退款金额")
+    @NotNull(message = "退款金额必传")
+    @Min(value = 1, message = "退款金额有误")
+    private Integer refundMoney;
+
+    @ApiModelProperty(value = "退款回调地址")
+    @NotBlank(message = "退款回调地址不能为空")
+    private String notifyUrl;
 
 }

@@ -27,6 +27,7 @@ public class EpayConfig {
     private String unifiedUrl;
     private String microPayUrl;
     private String orderQueryUrl;
+    private String refundOrderUrl;
 
 
 

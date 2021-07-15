@@ -12,17 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.common.exception.BadBusinessException;
-import top.inson.springboot.data.dao.IChannelSubmerConfigMapper;
-import top.inson.springboot.data.dao.IMerCashierMapper;
-import top.inson.springboot.data.dao.IMerChannelSettingMapper;
-import top.inson.springboot.data.dao.IPayOrderMapper;
-import top.inson.springboot.data.entity.ChannelSubmerConfig;
-import top.inson.springboot.data.entity.MerCashier;
-import top.inson.springboot.data.entity.MerChannelSetting;
-import top.inson.springboot.data.entity.PayOrder;
+import top.inson.springboot.data.dao.*;
+import top.inson.springboot.data.entity.*;
 import top.inson.springboot.data.enums.PayCategoryEnum;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.data.enums.PayTypeEnum;
+import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.pay.entity.dto.*;
 import top.inson.springboot.pay.entity.vo.*;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
@@ -47,6 +42,8 @@ public class PayServiceImpl implements IPayService {
     private IPayOrderMapper payOrderMapper;
     @Autowired
     private IChannelSubmerConfigMapper channelSubmerConfigMapper;
+    @Autowired
+    private IRefundOrderMapper refundOrderMapper;
 
 
     @Autowired
@@ -82,6 +79,7 @@ public class PayServiceImpl implements IPayService {
         UnifiedOrderDto unifiedDto = channelService.unifiedOrder(payOrder, submerConfig);
         if (unifiedDto != null){
             PayOrder newOrder = this.upPayOrder(unifiedDto, payOrder.getOrderNo());
+            unifiedDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
             BeanUtil.copyProperties(newOrder, unifiedDto);
         }
         return unifiedDto;
@@ -116,6 +114,7 @@ public class PayServiceImpl implements IPayService {
         MicroPayDto payDto = channelService.microPay(payOrder, submerConfig);
         if (payDto != null) {
             PayOrder newOrder = this.upPayOrder(payDto, payOrder.getOrderNo());
+            payDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
             BeanUtil.copyProperties(newOrder, payDto);
         }
         return payDto;
@@ -124,16 +123,12 @@ public class PayServiceImpl implements IPayService {
     @Override
     public RefundOrderDto refundOrder(RefundOrderVo vo) {
         PayOrder payOrder = this.validPayOrder(vo.getCashier(), vo.getOrderNo(), null);
-        PayOrderStatusEnum statusEnum = PayOrderStatusEnum.getCategory(payOrder.getOrderStatus());
-        if (statusEnum != PayOrderStatusEnum.PAY_SUCCESS
-                && statusEnum != PayOrderStatusEnum.PARTIAL_REFUND)
-            throw new BadBusinessException(PayBadBusinessEnum.ORDER_NOT_ALLOW_REFUND);
 
-        //根据订单标识获取渠道
-        IChannelService channelService = strategyService.getChannelService(payOrder.getChannelNo());
-        if (channelService == null)
-            throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_EXISTS);
+        RefundOrder refundOrder = new RefundOrder();
+        IChannelService channelService = this.validRefundParam(vo, payOrder, refundOrder);
 
+        BeanUtil.copyProperties(vo, refundOrder);
+        this.saveRefundOrder(refundOrder);
         //查询渠道配置
         Example subCofExample = new Example(ChannelSubmerConfig.class);
         subCofExample.createCriteria()
@@ -142,8 +137,61 @@ public class PayServiceImpl implements IPayService {
                 .andEqualTo("payType", payOrder.getPayType());
         ChannelSubmerConfig submerConfig = channelSubmerConfigMapper.selectOneByExample(subCofExample);
 
-        channelService.refundOrder();
-        return null;
+        RefundOrderDto refundDto = channelService.refundOrder(refundOrder, submerConfig);
+        if (refundDto != null){
+            RefundOrder newOrder = this.upRefundOrder(refundDto, refundOrder.getRefundNo());
+            refundDto.setRefundMoney(AmountUtil.changeYuanToFen(newOrder.getRefundAmount()));
+            BeanUtil.copyProperties(newOrder, refundDto);
+        }
+        return refundDto;
+    }
+
+    private void saveRefundOrder(RefundOrder refundOrder) {
+        String refundNo = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN) + RandomUtil.randomNumbers(8);
+        log.info("退款订单号refundNo:" + refundNo);
+        refundOrder.setRefundNo(refundNo);
+        refundOrderMapper.insertSelective(refundOrder);
+    }
+
+    private IChannelService validRefundParam(RefundOrderVo vo, PayOrder payOrder, RefundOrder refundOrder) {
+        PayOrderStatusEnum statusEnum = PayOrderStatusEnum.getCategory(payOrder.getOrderStatus());
+        if (statusEnum != PayOrderStatusEnum.PAY_SUCCESS
+                && statusEnum != PayOrderStatusEnum.PARTIAL_REFUND)
+            throw new BadBusinessException(PayBadBusinessEnum.ORDER_NOT_ALLOW_REFUND);
+        Example example = new Example(RefundOrder.class);
+        example.createCriteria()
+                .andEqualTo("mchRefundNo", vo.getMchRefundNo());
+        int count = refundOrderMapper.selectCountByExample(example);
+        if (count > 0)
+            throw new BadBusinessException(PayBadBusinessEnum.REFUND_ORDER_EXISTS);
+
+        BigDecimal bigRefundMoney = new BigDecimal(AmountUtil.changeFenToYuan(vo.getRefundMoney()));
+        BigDecimal payAmount = payOrder.getPayAmount();
+        BigDecimal allRefundAmount = payOrder.getAllRefundAmount();
+        if (allRefundAmount == null)
+            allRefundAmount = BigDecimal.ZERO;
+        //剩余金额=支付金额-总退款金额-本次退款金额
+        BigDecimal balanceAmount = payAmount.subtract(allRefundAmount).subtract(bigRefundMoney);
+        log.info("余额={},支付金额{},-总退款金额{},-本次退款金额{}", balanceAmount, payAmount, allRefundAmount, bigRefundMoney);
+        if (balanceAmount.compareTo(BigDecimal.ZERO) < 0)
+            throw new BadBusinessException(PayBadBusinessEnum.REFUND_MONEY_ERROR);
+        BigDecimal newAllRefundMoney = allRefundAmount.add(bigRefundMoney);
+        log.info("总退款金额={},总退款金额{},+本次退款金额{}", newAllRefundMoney, allRefundAmount, bigRefundMoney);
+
+        //构建退款订单参数
+        payOrder.setAllRefundAmount(newAllRefundMoney);
+
+        refundOrder.setRefundAmount(bigRefundMoney)
+                .setPayOrderNo(payOrder.getOrderNo())
+                .setMerchantNo(payOrder.getMerchantNo())
+                .setRefundStatus(RefundStatusEnum.APPLY_REFUND.getCode())
+                .setChannelNo(payOrder.getChannelNo());
+
+        //根据订单标识获取渠道
+        IChannelService channelService = strategyService.getChannelService(payOrder.getChannelNo());
+        if (channelService == null)
+            throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_EXISTS);
+        return channelService;
     }
 
     @Override
@@ -167,6 +215,7 @@ public class PayServiceImpl implements IPayService {
         if (queryDto != null){
             PayOrder newOrder = this.upPayOrder(queryDto, payOrder.getOrderNo());
             //设置接口返回参数
+            queryDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
             BeanUtil.copyProperties(newOrder, queryDto);
         }
         return queryDto;
@@ -251,5 +300,16 @@ public class PayServiceImpl implements IPayService {
         log.info("更新订单参数upOrder：{}", gson.toJson(upOrder));
         payOrderMapper.updateByExampleSelective(upOrder, example);
         return payOrderMapper.selectOneByExample(example);
+    }
+
+    private RefundOrder upRefundOrder(RefundOrderDto refundDto, String refundNo) {
+        Example example = new Example(RefundOrder.class);
+        example.createCriteria()
+                .andEqualTo("refundNo", refundNo);
+        RefundOrder upOrder = new RefundOrder()
+                .setRefundStatus(refundDto.getRefundStatus())
+                .setRefundDesc(refundDto.getRefundDesc());
+        refundOrderMapper.updateByExampleSelective(upOrder, example);
+        return refundOrderMapper.selectOneByExample(example);
     }
 }
