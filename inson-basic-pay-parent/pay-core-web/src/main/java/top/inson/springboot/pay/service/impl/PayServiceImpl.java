@@ -92,6 +92,8 @@ public class PayServiceImpl implements IPayService {
         String merchantNo = merCashier.getMerchantNo();
 
         String clientType = PayUtils.getClientTypeByCode(vo.getAuthCode());
+        if (StrUtil.isBlank(clientType))
+            throw new BadBusinessException(PayBadBusinessEnum.AUTH_CODE_ERROR);
         vo.setPayType(Integer.parseInt(clientType));
 
         //构建支付订单
@@ -250,7 +252,46 @@ public class PayServiceImpl implements IPayService {
 
     @Override
     public RefundQueryDto refundQuery(RefundQueryVo vo) {
-        return null;
+        PayOrder payOrder = new PayOrder();
+        RefundOrder refundOrder = new RefundOrder();
+        IChannelService channelService = this.validRefundQueryParam(vo, payOrder, refundOrder);
+
+        //查询渠道配置
+        Example subCofExample = new Example(ChannelSubmerConfig.class);
+        subCofExample.createCriteria()
+                .andEqualTo("channelNo", refundOrder.getChannelNo())
+                .andEqualTo("merchantNo", refundOrder.getMerchantNo())
+                .andEqualTo("payType", payOrder.getPayType());
+        ChannelSubmerConfig submerConfig = channelSubmerConfigMapper.selectOneByExample(subCofExample);
+
+        RefundQueryDto queryDto = channelService.refundQuery(refundOrder, submerConfig);
+        if (queryDto != null){
+            RefundOrder newRefund = this.upRefundOrder(queryDto, refundOrder.getRefundNo());
+            queryDto.setRefundMoney(AmountUtil.changeYuanToFen(newRefund.getRefundAmount()));
+            BeanUtil.copyProperties(newRefund, queryDto);
+        }
+        return queryDto;
+    }
+
+    private IChannelService validRefundQueryParam(RefundQueryVo vo, PayOrder payOrder, RefundOrder refundOrder) {
+        RefundOrder refundData = refundOrderMapper.selectOne(refundOrder
+                .setRefundNo(vo.getRefundNo())
+                .setCashier(vo.getCashier())
+        );
+        if (refundData == null)
+            throw new BadBusinessException(PayBadBusinessEnum.REFUND_ORDER_NOT_EXISTS);
+        BeanUtil.copyProperties(refundData, refundOrder);
+
+        PayOrder payData = payOrderMapper.selectOne(payOrder
+                .setOrderNo(refundOrder.getPayOrderNo())
+        );
+        BeanUtil.copyProperties(payData, payOrder);
+
+        //根据订单标识获取渠道
+        IChannelService channelService = strategyService.getChannelService(refundOrder.getChannelNo());
+        if (channelService == null)
+            throw new BadBusinessException(PayBadBusinessEnum.CHANNEL_NOT_EXISTS);
+        return channelService;
     }
 
     private IChannelService validPayParam(String mchOrderNo, Integer payMoney, Integer payType, String merchantNo, PayOrder payOrder) {
@@ -313,13 +354,16 @@ public class PayServiceImpl implements IPayService {
         return payOrderMapper.selectOneByExample(example);
     }
 
-    private RefundOrder upRefundOrder(RefundOrderDto refundDto, String refundNo) {
+    private RefundOrder upRefundOrder(RefundBaseDto baseDto, String refundNo) {
         Example example = new Example(RefundOrder.class);
         example.createCriteria()
                 .andEqualTo("refundNo", refundNo);
-        RefundOrder upOrder = new RefundOrder()
-                .setRefundStatus(refundDto.getRefundStatus())
-                .setRefundDesc(refundDto.getRefundDesc());
+        RefundOrder upOrder = new RefundOrder();
+        BeanUtil.copyProperties(baseDto, upOrder);
+        if (StrUtil.isNotBlank(upOrder.getRefundNo()))
+            upOrder.setRefundNo(null);
+
+        log.info("退款更新参数：{}", gson.toJson(upOrder));
         refundOrderMapper.updateByExampleSelective(upOrder, example);
         return refundOrderMapper.selectOneByExample(example);
     }

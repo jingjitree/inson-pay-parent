@@ -91,12 +91,12 @@ public class PayController {
         }
     }
 
-
+    @PayCheckSign
     @ApiOperation(value = "退款查询")
     @PostMapping("/refundQuery")
     public CommonResult<RefundQueryDto> refundQuery(@RequestBody @Valid RefundQueryVo vo){
         try {
-            return CommonResult.success();
+            return CommonResult.success(payService.refundQuery(vo));
         }catch (BadBusinessException e){
             return CommonResult.fail(e.getStatus(), e.getMessage());
         }catch (Exception e){

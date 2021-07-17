@@ -21,6 +21,8 @@ public enum PayBadBusinessEnum implements IBadBusiness {
     ORDER_NOT_ALLOW_REFUND(1107, "订单不允许退款"),
     REFUND_MONEY_ERROR(1108,"退款金额有误"),
     REFUND_ORDER_EXISTS(1109,"退款订单号不允许重复"),
+    AUTH_CODE_ERROR(1110,"付款码有误"),
+    REFUND_ORDER_NOT_EXISTS(1111,"退款订单不存在"),
 
 
     BUSINESS_ERROR(2001,"支付业务出错"),

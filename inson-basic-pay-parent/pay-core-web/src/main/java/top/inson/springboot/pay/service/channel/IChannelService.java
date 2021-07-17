@@ -3,10 +3,7 @@ package top.inson.springboot.pay.service.channel;
 import top.inson.springboot.data.entity.ChannelSubmerConfig;
 import top.inson.springboot.data.entity.PayOrder;
 import top.inson.springboot.data.entity.RefundOrder;
-import top.inson.springboot.pay.entity.dto.MicroPayDto;
-import top.inson.springboot.pay.entity.dto.OrderQueryDto;
-import top.inson.springboot.pay.entity.dto.RefundOrderDto;
-import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
+import top.inson.springboot.pay.entity.dto.*;
 
 public interface IChannelService {
 
@@ -18,6 +15,6 @@ public interface IChannelService {
 
     OrderQueryDto orderQuery(PayOrder payOrder, ChannelSubmerConfig submerConfig);
 
-    void refundQuery();
+    RefundQueryDto refundQuery(RefundOrder refundOrder, ChannelSubmerConfig submerConfig);
 
 }

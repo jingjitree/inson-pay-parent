@@ -29,10 +29,7 @@ import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.pay.annotation.ChannelHandler;
 import top.inson.springboot.pay.constant.EpayConfig;
 import top.inson.springboot.pay.constant.PayConstant;
-import top.inson.springboot.pay.entity.dto.MicroPayDto;
-import top.inson.springboot.pay.entity.dto.OrderQueryDto;
-import top.inson.springboot.pay.entity.dto.RefundOrderDto;
-import top.inson.springboot.pay.entity.dto.UnifiedOrderDto;
+import top.inson.springboot.pay.entity.dto.*;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
 import top.inson.springboot.pay.service.channel.IChannelService;
 import top.inson.springboot.utils.AmountUtil;
@@ -60,7 +57,8 @@ public class EpayServiceImpl implements IChannelService {
 
 
 
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = new GsonBuilder()
+            .create();
     @Override
     public UnifiedOrderDto unifiedOrder(PayOrder payOrder, ChannelSubmerConfig submerConfig) {
         log.debug("易票联渠道主扫处理的逻辑");
@@ -306,44 +304,95 @@ public class EpayServiceImpl implements IChannelService {
             log.error("订单查询异常", e);
             resultJson.addProperty(PayConstant.STATUS, false);
         }
-        return this.doOrderQueryResult(payOrder, resultJson, response);
+        return this.doOrderQueryResult(resultJson, response);
     }
 
-    private OrderQueryDto doOrderQueryResult(PayOrder payOrder, JsonObject resultJson, HttpResponse response) {
+    private OrderQueryDto doOrderQueryResult(JsonObject resultJson, HttpResponse response) {
         if (!resultJson.get(PayConstant.STATUS).getAsBoolean() || !response.isOk())
             throw new BadBusinessException(PayBadBusinessEnum.SEND_REQUEST_ERROR);
+
         String body = response.body();
         log.info("易票联订单查询结果：{}", body);
         JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
-        if (!"0000".equals(bodyObj.get("returnCode").getAsString()))
-            throw new BadBusinessException(PayBadBusinessEnum.SEND_REQUEST_ERROR);
-        String payState = bodyObj.get("payState").getAsString();
-        int orderStatus;
-        switch (payState){
-            case "00":
-                orderStatus = PayOrderStatusEnum.PAY_SUCCESS.getCode();
-                break;
-            case "01":
-                orderStatus = PayOrderStatusEnum.PAY_FAIL.getCode();
-                break;
-            case "03":
-                orderStatus = PayOrderStatusEnum.PAYING.getCode();
-                break;
-            default:
-                orderStatus = PayOrderStatusEnum.PAY_CANCEL.getCode();
-                break;
-        }
-
+        String returnMsg = bodyObj.get("returnMsg").getAsString();
+        //返回参数
         OrderQueryDto queryDto = new OrderQueryDto();
-        queryDto.setOrderStatus(orderStatus)
-                .setOrderDesc(bodyObj.get("returnMsg").getAsString())
-                .setChOrderNo(bodyObj.get("transactionNo").getAsString());
+        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
+            queryDto.setOrderDesc(returnMsg);
+        }else {
+            int orderStatus;
+            switch (bodyObj.get("payState").getAsString()) {
+                case "00":
+                    orderStatus = PayOrderStatusEnum.PAY_SUCCESS.getCode();
+                    break;
+                case "01":
+                    orderStatus = PayOrderStatusEnum.PAY_FAIL.getCode();
+                    break;
+                case "03":
+                    orderStatus = PayOrderStatusEnum.PAYING.getCode();
+                    break;
+                default:
+                    orderStatus = PayOrderStatusEnum.PAY_CANCEL.getCode();
+                    break;
+            }
+            queryDto.setOrderStatus(orderStatus)
+                    .setOrderDesc(returnMsg)
+                    .setChOrderNo(bodyObj.get("transactionNo").getAsString());
+        }
         return queryDto;
     }
 
     @Override
-    public void refundQuery() {
+    public RefundQueryDto refundQuery(RefundOrder refundOrder, ChannelSubmerConfig submerConfig) {
+        String nowDateStr = DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_PATTERN);
+        Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("customerCode", submerConfig.getChannelSubMerNo())
+                .put("outRefundNo", refundOrder.getRefundNo())
+                .put("nonceStr", RandomUtil.randomString(12))
+                .build();
+        String reqJson = gson.toJson(reqMap);
+        JsonObject resultJson = new JsonObject();
+        HttpResponse response = null;
+        try {
+            String reqUrl = epayConfig.getBaseUrl() + epayConfig.getRefundQueryUrl();
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
+            response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
+            resultJson.addProperty(PayConstant.STATUS, true);
+        } catch (Exception e) {
+            log.error("退款查询异常", e);
+            resultJson.addProperty(PayConstant.STATUS, false);
+        }
+        return this.doRefundQueryResult(resultJson, response);
+    }
 
+    private RefundQueryDto doRefundQueryResult(JsonObject resultJson, HttpResponse response) {
+        if (!resultJson.get(PayConstant.STATUS).getAsBoolean() || !response.isOk())
+            throw new BadBusinessException(PayBadBusinessEnum.SEND_REQUEST_ERROR);
+        String body = response.body();
+        log.info("易票联退款查询结果：{}", body);
+        JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
+        String returnMsg = bodyObj.get("returnMsg").getAsString();
+        RefundQueryDto queryDto = new RefundQueryDto();
+        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
+            queryDto.setRefundDesc(returnMsg);
+        }else {
+            int refundStatus;
+            switch (bodyObj.get("refundState").getAsString()){
+                case "00":
+                    refundStatus = RefundStatusEnum.REFUND_SUCCESS.getCode();
+                    queryDto.setRefundTime(DateUtil.parse(bodyObj.get("refundTime").getAsString(), DatePattern.PURE_DATETIME_PATTERN));
+                    break;
+                case "01":
+                    refundStatus = RefundStatusEnum.REFUND_FAIL.getCode();
+                    break;
+                default:
+                    refundStatus = RefundStatusEnum.REFUNDING.getCode();
+                    break;
+            }
+            queryDto.setRefundStatus(refundStatus)
+                    .setRefundDesc(returnMsg);
+        }
+        return queryDto;
     }
 
     /**

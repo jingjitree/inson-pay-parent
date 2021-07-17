@@ -165,6 +165,23 @@ public class TestEpay {
 
     }
 
+    @Test
+    public void refundQuery(){
+        String reqUrl = baseUrl + "/api/txs/custPay/refundQuery";
+        Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("customerCode", customerCode)
+                .put("outRefundNo", "2021071517521938533314")
+                .put("nonceStr", RandomUtil.randomString(12))
+                .build();
+        String reqJson = gson.toJson(reqMap);
+        try {
+            Map<String, String> headers = this.buildHeadersSign(reqJson, nowDateStr);
+            HttpResponse response = HttpUtils.sendPostJson(reqUrl, headers, reqJson);
+            log.info("响应body: {}", response.body());
+        } catch (Exception e) {
+        }
+    }
+
 
     private Map<String, String> buildHeadersSign(String reqJson, String nowDateStr) throws Exception{
         Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())

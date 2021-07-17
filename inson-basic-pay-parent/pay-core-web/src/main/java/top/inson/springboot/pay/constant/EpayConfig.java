@@ -28,7 +28,6 @@ public class EpayConfig {
     private String microPayUrl;
     private String orderQueryUrl;
     private String refundOrderUrl;
-
-
+    private String refundQueryUrl;
 
 }
