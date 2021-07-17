@@ -228,8 +228,8 @@ public class PayServiceImpl implements IPayService {
         if (queryDto != null){
             PayOrder newOrder = this.upPayOrder(queryDto, payOrder.getOrderNo());
             //设置接口返回参数
-            queryDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
             BeanUtil.copyProperties(newOrder, queryDto);
+            queryDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
         }
         return queryDto;
     }
@@ -267,8 +267,8 @@ public class PayServiceImpl implements IPayService {
         RefundQueryDto queryDto = channelService.refundQuery(refundOrder, submerConfig);
         if (queryDto != null){
             RefundOrder newRefund = this.upRefundOrder(queryDto, refundOrder.getRefundNo());
-            queryDto.setRefundMoney(AmountUtil.changeYuanToFen(newRefund.getRefundAmount()));
             BeanUtil.copyProperties(newRefund, queryDto);
+            queryDto.setRefundMoney(AmountUtil.changeYuanToFen(newRefund.getRefundAmount()));
         }
         return queryDto;
     }

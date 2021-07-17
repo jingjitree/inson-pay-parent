@@ -13,6 +13,7 @@ import cn.hutool.crypto.asymmetric.SignAlgorithm;
 import cn.hutool.http.HttpResponse;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -335,9 +336,10 @@ public class EpayServiceImpl implements IChannelService {
                     orderStatus = PayOrderStatusEnum.PAY_CANCEL.getCode();
                     break;
             }
+            JsonElement transElement = bodyObj.get("transactionNo");
             queryDto.setOrderStatus(orderStatus)
                     .setOrderDesc(returnMsg)
-                    .setChOrderNo(bodyObj.get("transactionNo").getAsString());
+                    .setChOrderNo(transElement.isJsonNull() ? "" : transElement.getAsString());
         }
         return queryDto;
     }
