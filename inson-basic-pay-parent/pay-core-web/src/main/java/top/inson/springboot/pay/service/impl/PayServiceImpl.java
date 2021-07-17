@@ -80,7 +80,7 @@ public class PayServiceImpl implements IPayService {
         if (unifiedDto != null){
             PayOrder newOrder = this.upPayOrder(unifiedDto, payOrder.getOrderNo());
             BeanUtil.copyProperties(newOrder, unifiedDto);
-            unifiedDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
+            unifiedDto.setPayMoney(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
         }
         return unifiedDto;
     }
@@ -117,7 +117,7 @@ public class PayServiceImpl implements IPayService {
         if (payDto != null) {
             PayOrder newOrder = this.upPayOrder(payDto, payOrder.getOrderNo());
             BeanUtil.copyProperties(newOrder, payDto);
-            payDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
+            payDto.setPayMoney(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
         }
         return payDto;
     }
@@ -229,7 +229,7 @@ public class PayServiceImpl implements IPayService {
             PayOrder newOrder = this.upPayOrder(queryDto, payOrder.getOrderNo());
             //设置接口返回参数
             BeanUtil.copyProperties(newOrder, queryDto);
-            queryDto.setPayAmount(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
+            queryDto.setPayMoney(AmountUtil.changeYuanToFen(newOrder.getPayAmount()));
         }
         return queryDto;
     }

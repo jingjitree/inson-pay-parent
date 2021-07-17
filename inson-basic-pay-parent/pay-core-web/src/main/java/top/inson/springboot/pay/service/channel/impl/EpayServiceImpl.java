@@ -339,7 +339,7 @@ public class EpayServiceImpl implements IChannelService {
             JsonElement transElement = bodyObj.get("transactionNo");
             queryDto.setOrderStatus(orderStatus)
                     .setOrderDesc(returnMsg)
-                    .setChOrderNo(transElement.isJsonNull() ? "" : transElement.getAsString());
+                    .setChOrderNo(transElement.isJsonNull() ? null : transElement.getAsString());
         }
         return queryDto;
     }

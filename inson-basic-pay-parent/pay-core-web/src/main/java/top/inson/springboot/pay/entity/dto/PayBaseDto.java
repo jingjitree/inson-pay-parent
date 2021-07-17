@@ -27,7 +27,7 @@ public class PayBaseDto implements java.io.Serializable{
     private String orderDesc;
 
     @ApiModelProperty(value = "订单金额（单位：分）")
-    private Integer payAmount;
+    private Integer payMoney;
 
     @JsonIgnore
     private String chOrderNo;
