@@ -318,9 +318,7 @@ public class EpayServiceImpl implements IChannelService {
         String returnMsg = bodyObj.get("returnMsg").getAsString();
         //返回参数
         OrderQueryDto queryDto = new OrderQueryDto();
-        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
-            queryDto.setOrderDesc(returnMsg);
-        }else {
+        if ("0000".equals(bodyObj.get("returnCode").getAsString())){
             int orderStatus;
             switch (bodyObj.get("payState").getAsString()) {
                 case "00":
@@ -338,9 +336,9 @@ public class EpayServiceImpl implements IChannelService {
             }
             JsonElement transElement = bodyObj.get("transactionNo");
             queryDto.setOrderStatus(orderStatus)
-                    .setOrderDesc(returnMsg)
                     .setChOrderNo(transElement.isJsonNull() ? null : transElement.getAsString());
         }
+        queryDto.setOrderDesc(returnMsg);
         return queryDto;
     }
 
@@ -375,9 +373,7 @@ public class EpayServiceImpl implements IChannelService {
         JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
         String returnMsg = bodyObj.get("returnMsg").getAsString();
         RefundQueryDto queryDto = new RefundQueryDto();
-        if (!"0000".equals(bodyObj.get("returnCode").getAsString())){
-            queryDto.setRefundDesc(returnMsg);
-        }else {
+        if ("0000".equals(bodyObj.get("returnCode").getAsString())){
             int refundStatus;
             switch (bodyObj.get("refundState").getAsString()){
                 case "00":
@@ -391,9 +387,9 @@ public class EpayServiceImpl implements IChannelService {
                     refundStatus = RefundStatusEnum.REFUNDING.getCode();
                     break;
             }
-            queryDto.setRefundStatus(refundStatus)
-                    .setRefundDesc(returnMsg);
+            queryDto.setRefundStatus(refundStatus);
         }
+        queryDto.setRefundDesc(returnMsg);
         return queryDto;
     }
 
