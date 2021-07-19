@@ -29,6 +29,7 @@ import top.inson.springboot.data.enums.PayTypeEnum;
 import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.pay.annotation.ChannelHandler;
 import top.inson.springboot.pay.constant.EpayConfig;
+import top.inson.springboot.pay.constant.PayConfig;
 import top.inson.springboot.pay.constant.PayConstant;
 import top.inson.springboot.pay.entity.dto.*;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
@@ -55,6 +56,8 @@ public class EpayServiceImpl implements IChannelService {
 
     @Autowired
     private EpayConfig epayConfig;
+    @Autowired
+    private PayConfig payConfig;
 
 
 
@@ -85,7 +88,7 @@ public class EpayServiceImpl implements IChannelService {
                 .put("payMethod", payMethod)
                 .put("payAmount", amount)
                 .put("payCurrency", "CNY")
-                .put("notifyUrl", "http://g.cn")
+                .put("notifyUrl", payConfig.getPayBaseUrl() + payConfig.getENotifyUrl())
                 .put("transactionStartTime", nowDateStr)
                 .put("nonceStr", RandomUtil.randomString(12))
                 .build();
@@ -162,6 +165,7 @@ public class EpayServiceImpl implements IChannelService {
                 .put("payMethod", payMethod)
                 .put("payAmount", amount)
                 .put("payCurrency","CNY")
+                .put("notifyUrl", payConfig.getPayBaseUrl() + payConfig.getENotifyUrl())
                 .put("transactionStartTime", nowDateStr)
                 .put("authCode", payOrder.getAuthCode())
                 .put("nonceStr", RandomUtil.randomString(12))
