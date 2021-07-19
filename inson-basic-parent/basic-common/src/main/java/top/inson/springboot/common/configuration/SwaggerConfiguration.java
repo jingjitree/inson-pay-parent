@@ -19,7 +19,7 @@ public class SwaggerConfiguration {
     @Bean
     public Docket docket(Environment environment){
         //设置要显示的swagger环境
-        Profiles profiles = Profiles.of("dev", "prod");
+        Profiles profiles = Profiles.of("dev", "test");
         //通过Environment.acceptsProfiles 判断是否处在自己设定的环境中
         boolean enable = environment.acceptsProfiles(profiles);
         log.info("是否开启swagger：{}", enable);
