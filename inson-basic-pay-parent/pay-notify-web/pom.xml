@@ -18,10 +18,6 @@
             <artifactId>basic-data</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>top.inson.springboot</groupId>
-            <artifactId>basic-util</artifactId>
-        </dependency>
     </dependencies>
 
 </project>
