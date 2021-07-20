@@ -239,7 +239,7 @@ public class EpayServiceImpl implements IChannelService {
 
         Map<String, Object> reqMap = MapUtil.builder(new HashMap<String, Object>())
                 .put("customerCode", submerConfig.getChannelSubMerNo())
-                .put("outRefundNo", RandomUtil.randomNumbers(13))
+                .put("outRefundNo", refundOrder.getRefundNo())
                 .put("outTradeNo", payOrder.getOrderNo())
                 .put("refundAmount", AmountUtil.changeYuanToFen(refundOrder.getRefundAmount()))
                 .put("amount", AmountUtil.changeYuanToFen(payOrder.getPayAmount()))
