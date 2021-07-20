@@ -9,3 +9,6 @@ spring:
     host: 127.0.0.1
     port: 6379
     password: UxMiJ9
+
+pay:
+  baseUrl: http://api3.taotaoshi.cn/notify

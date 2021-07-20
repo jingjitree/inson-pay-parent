@@ -1,5 +1,7 @@
 package top.inson.springboot.notify.service.impl;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.Sign;
 import cn.hutool.crypto.asymmetric.SignAlgorithm;
@@ -11,8 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.data.dao.IPayOrderMapper;
+import top.inson.springboot.data.dao.IRefundOrderMapper;
 import top.inson.springboot.data.entity.PayOrder;
+import top.inson.springboot.data.entity.RefundOrder;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
+import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.notify.service.IBaseNotifyService;
 import top.inson.springboot.notify.service.IEPayNotifyService;
 import top.inson.springboot.paycommon.constant.EpayConfig;
@@ -20,6 +25,7 @@ import top.inson.springboot.paycommon.util.PFXUtil;
 
 import java.nio.charset.Charset;
 import java.security.PublicKey;
+import java.util.Date;
 import java.util.Map;
 
 
@@ -28,7 +34,8 @@ import java.util.Map;
 public class EPayNotifyServiceImpl implements IEPayNotifyService {
     @Autowired
     private IPayOrderMapper payOrderMapper;
-
+    @Autowired
+    private IRefundOrderMapper refundOrderMapper;
 
     @Autowired
     private EpayConfig epayConfig;
@@ -58,28 +65,31 @@ public class EPayNotifyServiceImpl implements IEPayNotifyService {
             log.info("orderNo:{},找不到该订单", orderNo);
             return "fail";
         }
-        PayOrderStatusEnum orderStatusEnum;
+        PayOrderStatusEnum orderEnum;
+        Date payTime = null;
         switch (payState){
             case "00":
-                orderStatusEnum = PayOrderStatusEnum.PAY_SUCCESS;
+                orderEnum = PayOrderStatusEnum.PAY_SUCCESS;
+                payTime = DateUtil.parse((String)notifyMap.get("payTime"), DatePattern.PURE_DATETIME_PATTERN);
                 break;
             case "01":
-                orderStatusEnum = PayOrderStatusEnum.PAY_FAIL;
+                orderEnum = PayOrderStatusEnum.PAY_FAIL;
                 break;
             case "05":
-                orderStatusEnum = PayOrderStatusEnum.PAY_CANCEL;
+                orderEnum = PayOrderStatusEnum.PAY_CANCEL;
                 break;
             case "06":
-                orderStatusEnum = PayOrderStatusEnum.PAY_CANCEL;
+                orderEnum = PayOrderStatusEnum.PAY_CANCEL;
                 break;
             default:
-                orderStatusEnum = PayOrderStatusEnum.PAYING;
+                orderEnum = PayOrderStatusEnum.PAYING;
                 break;
         }
 
         PayOrder upOrder = new PayOrder()
-                .setOrderStatus(orderStatusEnum.getCode())
-                .setOrderDesc(orderStatusEnum.getDesc())
+                .setOrderStatus(orderEnum.getCode())
+                .setOrderDesc(orderEnum.getDesc())
+                .setPayTime(payTime)
                 .setChOrderNo((String) notifyMap.get("transactionNo"))
                 .setPreChOrderNo((String) notifyMap.get("channelOrder"))
                 .setOpenid((String) notifyMap.get("openId"))
@@ -98,6 +108,40 @@ public class EPayNotifyServiceImpl implements IEPayNotifyService {
             log.info("验证签名失败");
             return "fail";
         }
+        String refundNo = (String) notifyMap.get("outRefundNo");
+        String refundState = (String) notifyMap.get("payState");
+        log.info("退款订单号refundNo：{},退款状态：{}", refundNo, refundState);
+        Example example = new Example(RefundOrder.class);
+        example.createCriteria()
+                .andEqualTo("refundNo", refundNo);
+        int countOrder = refundOrderMapper.selectCountByExample(example);
+        if (countOrder <= 0){
+            log.info("退款订单没找到refundNo:" + refundNo);
+            return "fail";
+        }
+        RefundStatusEnum refundEnum;
+        Date refundTime = null;
+        switch (refundState){
+            case "00":
+                refundEnum = RefundStatusEnum.REFUND_SUCCESS;
+                refundTime = DateUtil.parse((String)notifyMap.get("payTime"), DatePattern.PURE_DATETIME_PATTERN);
+                break;
+            case "01":
+                refundEnum = RefundStatusEnum.REFUND_FAIL;
+                break;
+            default:
+                refundEnum = RefundStatusEnum.REFUNDING;
+                break;
+        }
+
+        RefundOrder upOrder = new RefundOrder()
+                .setRefundStatus(refundEnum.getCode())
+                .setRefundDesc(refundEnum.getDesc())
+                .setRefundTime(refundTime)
+                .setChRefundNo((String) notifyMap.get("transactionNo"))
+                .setPreChRefundNo((String) notifyMap.get("channelTradeNo"));
+
+        baseNotifyService.refundNotify(upOrder, refundNo);
         return "SUCCESS";
     }
 

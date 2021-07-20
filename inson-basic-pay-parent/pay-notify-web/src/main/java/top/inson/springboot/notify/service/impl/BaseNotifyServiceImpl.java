@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.data.dao.IPayOrderMapper;
+import top.inson.springboot.data.dao.IRefundOrderMapper;
 import top.inson.springboot.data.entity.PayOrder;
+import top.inson.springboot.data.entity.RefundOrder;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.notify.service.IBaseNotifyService;
 
@@ -18,6 +20,8 @@ import top.inson.springboot.notify.service.IBaseNotifyService;
 public class BaseNotifyServiceImpl implements IBaseNotifyService {
     @Autowired
     private IPayOrderMapper payOrderMapper;
+    @Autowired
+    private IRefundOrderMapper refundOrderMapper;
 
 
     private final Gson gson = new GsonBuilder().create();
@@ -45,4 +49,24 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
         //通知下游商户
 
     }
+
+    @Override
+    public void refundNotify(RefundOrder upOrder, String refundNo) {
+        Example example = new Example(RefundOrder.class);
+        example.createCriteria()
+                .andEqualTo("refundNo", refundNo);
+        RefundOrder refundOrder = refundOrderMapper.selectOneByExample(example);
+        if (refundOrder == null){
+            log.info("退款订单不存在refundNo:" + refundNo);
+            return;
+        }
+
+        if (StrUtil.isNotBlank(upOrder.getRefundNo()))
+            upOrder.setRefundNo(null);
+        log.info("更新退款订单参数upOrder：{}", gson.toJson(upOrder));
+        refundOrderMapper.updateByExampleSelective(upOrder, example);
+        //通知下游
+
+    }
+
 }
