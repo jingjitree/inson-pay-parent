@@ -21,6 +21,7 @@
         <module>basic-config-security</module>
         <!--公共模块-->
         <module>basic-common</module>
+        <module>basic-pay-common</module>
     </modules>
 
     <dependencies>
