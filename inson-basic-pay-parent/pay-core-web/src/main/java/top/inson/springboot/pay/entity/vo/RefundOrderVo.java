@@ -31,4 +31,7 @@ public class RefundOrderVo extends PayBaseVo implements java.io.Serializable{
     @NotBlank(message = "退款回调地址不能为空")
     private String notifyUrl;
 
+    @ApiModelProperty(value = "退款备注字段")
+    private String remark;
+
 }

@@ -246,6 +246,8 @@ public class EpayServiceImpl implements IChannelService {
                 .put("notifyUrl", payConfig.getPayBaseUrl() + payConfig.getERefundNotifyUrl())
                 .put("nonceStr", RandomUtil.randomString(12))
                 .build();
+        if (StrUtil.isNotBlank(refundOrder.getRemark()))
+            reqMap.put("remark", refundOrder.getRemark());
         String reqJson = gson.toJson(reqMap);
         JsonObject resultJson = new JsonObject();
         HttpResponse response = null;
