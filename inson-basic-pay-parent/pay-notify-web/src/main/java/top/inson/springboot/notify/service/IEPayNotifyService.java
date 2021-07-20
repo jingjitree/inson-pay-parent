@@ -6,4 +6,6 @@ public interface IEPayNotifyService {
 
     String notifyMe(Map<String, Object> notifyMap, String efpsSign);
 
+    String refundNotify(Map<String, Object> notifyMap, String efpsSign);
+
 }

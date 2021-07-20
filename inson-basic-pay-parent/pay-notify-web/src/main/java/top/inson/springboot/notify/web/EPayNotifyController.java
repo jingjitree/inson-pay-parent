@@ -7,10 +7,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import top.inson.springboot.notify.service.IEPayNotifyService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +32,15 @@ public class EPayNotifyController {
         log.info("渠道响应签名：" + efpsSign);
 
         return ePayNotifyService.notifyMe(notifyMap, efpsSign);
+    }
+
+
+    @ApiOperation(value = "退款回调接口")
+    @PostMapping("/refundNotify")
+    public String refundNotify(@RequestBody Map<String, Object> notifyMap,
+                               @RequestHeader(value = "x-efps-sign") String efpsSign){
+        log.info("退款回调签名：" + efpsSign);
+        return ePayNotifyService.refundNotify(notifyMap, efpsSign);
     }
 
 

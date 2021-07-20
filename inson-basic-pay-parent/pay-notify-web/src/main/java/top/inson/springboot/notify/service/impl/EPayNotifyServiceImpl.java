@@ -89,6 +89,18 @@ public class EPayNotifyServiceImpl implements IEPayNotifyService {
         return "SUCCESS";
     }
 
+    @Override
+    public String refundNotify(Map<String, Object> notifyMap, String efpsSign) {
+        String reqJson = gson.toJson(notifyMap);
+        log.info("易票联退款回调json：{}", reqJson);
+        boolean check = this.checkEfpsSign(reqJson, efpsSign);
+        if (!check) {
+            log.info("验证签名失败");
+            return "fail";
+        }
+        return "SUCCESS";
+    }
+
     private boolean checkEfpsSign(String reqJson, String efpsSign) {
         String pubCertPath = epayConfig.getPubCertPath();
         log.debug("公钥证书路径：" + pubCertPath);
