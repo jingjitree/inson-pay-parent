@@ -26,7 +26,7 @@ import top.inson.springboot.pay.service.IPayService;
 import top.inson.springboot.pay.service.channel.IChannelService;
 import top.inson.springboot.pay.strategy.IStrategyService;
 import top.inson.springboot.utils.AmountUtil;
-import top.inson.springboot.utils.PayUtils;
+import top.inson.springboot.paycommon.util.PayUtils;
 
 import java.math.BigDecimal;
 

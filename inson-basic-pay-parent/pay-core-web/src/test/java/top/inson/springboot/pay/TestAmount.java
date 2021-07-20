@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import top.inson.springboot.data.enums.PayTypeEnum;
 import top.inson.springboot.utils.AmountUtil;
-import top.inson.springboot.utils.PayUtils;
+import top.inson.springboot.paycommon.util.PayUtils;
 
 @Slf4j
 public class TestAmount {

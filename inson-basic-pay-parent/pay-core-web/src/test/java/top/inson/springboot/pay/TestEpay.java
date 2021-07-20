@@ -15,7 +15,7 @@ import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import top.inson.springboot.utils.HttpUtils;
-import top.inson.springboot.utils.PFXUtil;
+import top.inson.springboot.paycommon.util.PFXUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
