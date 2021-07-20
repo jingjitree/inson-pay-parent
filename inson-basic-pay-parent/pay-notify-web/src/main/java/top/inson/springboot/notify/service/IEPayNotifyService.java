@@ -4,6 +4,6 @@ import java.util.Map;
 
 public interface IEPayNotifyService {
 
-    String notifyMe(Map<String, Object> params, String efpsSign);
+    String notifyMe(Map<String, Object> notifyMap, String efpsSign);
 
 }

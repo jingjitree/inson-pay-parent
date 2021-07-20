@@ -30,11 +30,11 @@ public class EPayNotifyController {
 
     @ApiOperation(value = "支付回调接口")
     @PostMapping("/notifyMe")
-    public String notifyMe(@RequestBody Map<String, Object> params, HttpServletRequest request){
+    public String notifyMe(@RequestBody Map<String, Object> notifyMap, HttpServletRequest request){
         String efpsSign = request.getHeader("x-efps-sign");
         log.info("渠道响应签名：" + efpsSign);
 
-        return ePayNotifyService.notifyMe(params, efpsSign);
+        return ePayNotifyService.notifyMe(notifyMap, efpsSign);
     }
 
 

@@ -9,6 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
+import top.inson.springboot.data.dao.IPayOrderMapper;
+import top.inson.springboot.data.entity.PayOrder;
+import top.inson.springboot.data.enums.PayOrderStatusEnum;
+import top.inson.springboot.notify.service.IBaseNotifyService;
 import top.inson.springboot.notify.service.IEPayNotifyService;
 import top.inson.springboot.paycommon.constant.EpayConfig;
 import top.inson.springboot.paycommon.util.PFXUtil;
@@ -22,16 +27,65 @@ import java.util.Map;
 @Service
 public class EPayNotifyServiceImpl implements IEPayNotifyService {
     @Autowired
+    private IPayOrderMapper payOrderMapper;
+
+
+    @Autowired
     private EpayConfig epayConfig;
+
+    @Autowired
+    private IBaseNotifyService baseNotifyService;
+
 
     private final Gson gson = new GsonBuilder().create();
     @Override
-    public String notifyMe(Map<String, Object> params, String efpsSign) {
-        String reqJson = gson.toJson(params);
+    public String notifyMe(Map<String, Object> notifyMap, String efpsSign) {
+        String reqJson = gson.toJson(notifyMap);
         log.info("易票联回调reqJson：{}", reqJson);
         boolean check = this.checkEfpsSign(reqJson, efpsSign);
-        if (!check)
+        if (!check) {
+            log.info("验证签名失败");
             return "fail";
+        }
+        String orderNo = (String) notifyMap.get("outTradeNo");
+        String payState = (String) notifyMap.get("payState");
+        log.info("订单号orderNo：{},payState:{}", orderNo, payState);
+        Example example = new Example(PayOrder.class);
+        example.createCriteria()
+                .andEqualTo("orderNo", orderNo);
+        PayOrder payOrder = payOrderMapper.selectOneByExample(example);
+        if (payOrder == null){
+            log.info("orderNo:{},找不到该订单", orderNo);
+            return "fail";
+        }
+        PayOrderStatusEnum orderStatusEnum;
+        switch (payState){
+            case "00":
+                orderStatusEnum = PayOrderStatusEnum.PAY_SUCCESS;
+                break;
+            case "01":
+                orderStatusEnum = PayOrderStatusEnum.PAY_FAIL;
+                break;
+            case "05":
+                orderStatusEnum = PayOrderStatusEnum.PAY_CANCEL;
+                break;
+            case "06":
+                orderStatusEnum = PayOrderStatusEnum.PAY_CANCEL;
+                break;
+            default:
+                orderStatusEnum = PayOrderStatusEnum.PAYING;
+                break;
+        }
+
+        PayOrder upOrder = new PayOrder()
+                .setOrderStatus(orderStatusEnum.getCode())
+                .setOrderDesc(orderStatusEnum.getDesc())
+                .setChOrderNo((String) notifyMap.get("transactionNo"))
+                .setPreChOrderNo((String) notifyMap.get("channelOrder"))
+                .setOpenid((String) notifyMap.get("openId"))
+                .setSubOpenid((String) notifyMap.get("subOpenId"));
+
+        baseNotifyService.payOrderNotify(upOrder, orderNo);
         return "SUCCESS";
     }
 
