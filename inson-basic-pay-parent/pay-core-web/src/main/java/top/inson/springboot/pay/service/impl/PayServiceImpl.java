@@ -147,6 +147,7 @@ public class PayServiceImpl implements IPayService {
                     || RefundStatusEnum.REFUND_SUCCESS == category){
                 //退款申请成功
                 PayOrder upOrder = new PayOrder()
+                        .setOrderStatus(payOrder.getOrderStatus())
                         .setAllRefundAmount(payOrder.getAllRefundAmount());
                 Example example = new Example(PayOrder.class);
                 example.createCriteria()
@@ -193,7 +194,8 @@ public class PayServiceImpl implements IPayService {
         log.info("总退款金额={},总退款金额{},+本次退款金额{}", newAllRefundMoney, allRefundAmount, bigRefundMoney);
 
         //构建退款订单参数
-        payOrder.setAllRefundAmount(newAllRefundMoney);
+        payOrder.setAllRefundAmount(newAllRefundMoney)
+                .setOrderStatus(PayOrderStatusEnum.PARTIAL_REFUND.getCode());
 
         refundOrder.setRefundAmount(bigRefundMoney)
                 .setPayOrderNo(payOrder.getOrderNo())
@@ -211,7 +213,8 @@ public class PayServiceImpl implements IPayService {
     @Override
     public OrderQueryDto orderQuery(OrderQueryVo vo) {
         PayOrder payOrder = this.validPayOrder(vo.getCashier(), vo.getOrderNo(), vo.getMchOrderNo());
-        log.info("订单查询orderNo：" + payOrder.getOrderNo());
+        PayOrderStatusEnum orderCategory = PayOrderStatusEnum.getCategory(payOrder.getOrderStatus());
+        log.info("订单查询orderNo：{},订单状态：{},{}", payOrder.getOrderNo(), orderCategory.getCode(), orderCategory.getDesc());
         //根据订单标识获取渠道
         IChannelService channelService = strategyService.getChannelService(payOrder.getChannelNo());
         if (channelService == null)
@@ -226,6 +229,12 @@ public class PayServiceImpl implements IPayService {
         ChannelSubmerConfig submerConfig = channelSubmerConfigMapper.selectOneByExample(subCofExample);
 
         OrderQueryDto queryDto = channelService.orderQuery(payOrder, submerConfig);
+        if (orderCategory == PayOrderStatusEnum.PARTIAL_REFUND
+                || orderCategory == PayOrderStatusEnum.FULL_REFUND){
+            BeanUtil.copyProperties(payOrder, queryDto);
+            queryDto.setPayMoney(AmountUtil.changeYuanToFen(payOrder.getPayAmount()));
+            return queryDto;
+        }
         if (queryDto != null){
             PayOrder newOrder = this.upPayOrder(queryDto, payOrder.getOrderNo());
             //设置接口返回参数
