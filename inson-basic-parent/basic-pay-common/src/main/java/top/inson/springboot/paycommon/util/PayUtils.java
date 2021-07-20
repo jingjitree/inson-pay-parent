@@ -1,4 +1,4 @@
-package top.inson.springboot.utils;
+package top.inson.springboot.paycommon.util;
 
 import cn.hutool.core.util.StrUtil;
 

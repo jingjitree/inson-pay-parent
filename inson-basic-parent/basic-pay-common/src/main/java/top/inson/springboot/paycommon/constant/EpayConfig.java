@@ -1,4 +1,4 @@
-package top.inson.springboot.pay.constant;
+package top.inson.springboot.paycommon.constant;
 
 
 import lombok.Getter;
@@ -19,6 +19,7 @@ public class EpayConfig {
 
     private String certPwd;
 
+    private String pubCertPath;
     private String certPath;
     private String signType;
 

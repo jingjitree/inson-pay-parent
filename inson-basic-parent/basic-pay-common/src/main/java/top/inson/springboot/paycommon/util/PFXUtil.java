@@ -1,21 +1,27 @@
-package top.inson.springboot.utils;
+package top.inson.springboot.paycommon.util;
 
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.file.FileReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PFXUtil {
 
@@ -139,6 +145,33 @@ public class PFXUtil {
     public static PublicKey getPublicKey(String publicKeyStr) throws Exception {
         byte[] publicKeyByte = Base64.decodeBase64(publicKeyStr);
         return getPublicKey(publicKeyByte);
+    }
+
+    /**
+     * 读取.cer公钥文件，转成PublicKey
+     * @param filePath
+     * @return PublicKey
+     * @throws Exception
+     */
+    public static PublicKey getPublicKeyByFilePath(String filePath) throws Exception{
+        File file = new File(filePath);
+        if (!file.exists())
+            return null;
+        FileReader reader = FileReader.create(file);
+        List<String> pubStrList = reader.readLines();
+        if (CollUtil.isEmpty(pubStrList))
+            return null;
+        String pubKeyStr = pubStrList.stream().filter(str -> !str.contains("-----"))
+                .collect(Collectors.joining());
+        return convertPublicKey(pubKeyStr);
+    }
+
+    private static PublicKey convertPublicKey(String keyStr) throws Exception{
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
+        Certificate certificate = certificateFactory.generateCertificate(
+                new ByteArrayInputStream(Base64.decodeBase64(keyStr.getBytes(Charset.defaultCharset())))
+        );
+        return certificate.getPublicKey();
     }
 
     /**
