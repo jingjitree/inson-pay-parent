@@ -53,8 +53,8 @@ public class EPayNotifyServiceImpl implements IEPayNotifyService {
         Example example = new Example(PayOrder.class);
         example.createCriteria()
                 .andEqualTo("orderNo", orderNo);
-        PayOrder payOrder = payOrderMapper.selectOneByExample(example);
-        if (payOrder == null){
+        int countOrder = payOrderMapper.selectCountByExample(example);
+        if (countOrder <= 0){
             log.info("orderNo:{},找不到该订单", orderNo);
             return "fail";
         }
