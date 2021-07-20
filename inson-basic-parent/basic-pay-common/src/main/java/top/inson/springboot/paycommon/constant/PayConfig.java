@@ -1,4 +1,4 @@
-package top.inson.springboot.pay.constant;
+package top.inson.springboot.paycommon.constant;
 
 
 import lombok.Getter;
@@ -19,6 +19,8 @@ public class PayConfig {
     private String payBaseUrl;
 
     private String eNotifyUrl;
+
+    private String eRefundNotifyUrl;
 
 
 }
