@@ -151,6 +151,7 @@ public class PayServiceImpl implements IPayService {
                 Example example = new Example(PayOrder.class);
                 example.createCriteria()
                         .andEqualTo("orderNo", payOrder.getOrderNo());
+                log.info("退款更新支付参数upOrder: {}", gson.toJson(upOrder));
                 payOrderMapper.updateByExampleSelective(upOrder, example);
             }
             BeanUtil.copyProperties(newOrder, refundDto);

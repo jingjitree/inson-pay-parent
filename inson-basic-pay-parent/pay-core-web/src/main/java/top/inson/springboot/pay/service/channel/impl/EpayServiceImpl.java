@@ -28,7 +28,7 @@ import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.data.enums.PayTypeEnum;
 import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.pay.annotation.ChannelHandler;
-import top.inson.springboot.pay.constant.PayConfig;
+import top.inson.springboot.paycommon.constant.PayConfig;
 import top.inson.springboot.pay.constant.PayConstant;
 import top.inson.springboot.pay.entity.dto.*;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
@@ -243,6 +243,7 @@ public class EpayServiceImpl implements IChannelService {
                 .put("outTradeNo", payOrder.getOrderNo())
                 .put("refundAmount", AmountUtil.changeYuanToFen(refundOrder.getRefundAmount()))
                 .put("amount", AmountUtil.changeYuanToFen(payOrder.getPayAmount()))
+                .put("notifyUrl", payConfig.getPayBaseUrl() + payConfig.getERefundNotifyUrl())
                 .put("nonceStr", RandomUtil.randomString(12))
                 .build();
         String reqJson = gson.toJson(reqMap);
