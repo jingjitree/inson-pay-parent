@@ -6,13 +6,17 @@ import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.data.dao.IPayOrderMapper;
 import top.inson.springboot.data.dao.IRefundOrderMapper;
 import top.inson.springboot.data.entity.PayOrder;
 import top.inson.springboot.data.entity.RefundOrder;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
+import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.notify.service.IBaseNotifyService;
+
+import java.math.BigDecimal;
 
 
 @Slf4j
@@ -50,6 +54,7 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
 
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void refundNotify(RefundOrder upOrder, String refundNo) {
         Example example = new Example(RefundOrder.class);
@@ -65,8 +70,32 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
             upOrder.setRefundNo(null);
         log.info("更新退款订单参数upOrder：{}", gson.toJson(upOrder));
         refundOrderMapper.updateByExampleSelective(upOrder, example);
+        if (upOrder.getRefundStatus().equals(RefundStatusEnum.REFUND_SUCCESS.getCode())){
+            //更改订单状态
+            Example orderExample = new Example(PayOrder.class);
+            orderExample.createCriteria()
+                    .andEqualTo("orderNo", refundOrder.getPayOrderNo());
+            PayOrder payOrder = payOrderMapper.selectOneByExample(orderExample);
+            PayOrder upPayOrder = null;
+            BigDecimal payAmount = payOrder.getPayAmount();
+            BigDecimal allRefundAmount = payOrder.getAllRefundAmount();
+            if (allRefundAmount == null)
+                allRefundAmount = BigDecimal.ZERO;
+            if (allRefundAmount.compareTo(payAmount) < 0){
+                upPayOrder = new PayOrder()
+                        .setOrderStatus(PayOrderStatusEnum.PARTIAL_REFUND.getCode())
+                        .setOrderDesc(PayOrderStatusEnum.PARTIAL_REFUND.getDesc());
+            }else if(allRefundAmount.compareTo(payAmount) == 0) {
+                upPayOrder = new PayOrder()
+                        .setOrderStatus(PayOrderStatusEnum.FULL_REFUND.getCode())
+                        .setOrderDesc(PayOrderStatusEnum.FULL_REFUND.getDesc());
+            }
+            if (upPayOrder != null) {
+                log.info("更新支付订单参数upPayOrder：{}", gson.toJson(upPayOrder));
+                payOrderMapper.updateByExampleSelective(upPayOrder, orderExample);
+            }
+        }
         //通知下游
-
     }
 
 }
