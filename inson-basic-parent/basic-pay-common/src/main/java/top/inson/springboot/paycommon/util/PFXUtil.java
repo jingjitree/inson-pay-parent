@@ -9,7 +9,6 @@ import org.apache.tomcat.util.codec.binary.Base64;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.nio.charset.Charset;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -166,10 +165,10 @@ public class PFXUtil {
         return convertPublicKey(pubKeyStr);
     }
 
-    private static PublicKey convertPublicKey(String keyStr) throws Exception{
+    public static PublicKey convertPublicKey(String keyStr) throws Exception{
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
         Certificate certificate = certificateFactory.generateCertificate(
-                new ByteArrayInputStream(Base64.decodeBase64(keyStr.getBytes(Charset.defaultCharset())))
+                new ByteArrayInputStream(Base64.decodeBase64(keyStr))
         );
         return certificate.getPublicKey();
     }
