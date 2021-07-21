@@ -31,14 +31,14 @@ public class AuthenticationController {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
-    private IOnlineUserService onlineUserService;
+    private IOnlineUserService<JwtAdminUsers> onlineUserService;
 
 
     @ApiOperation(value = "登录接口")
     //加上注解，接口不会被拦截
     @AnonymousAccess
     @PostMapping("/login")
-    public CommonResult login(@RequestBody AdminLoginVo vo, HttpServletRequest request){
+    public CommonResult<Map<String, Object>> login(@RequestBody AdminLoginVo vo, HttpServletRequest request){
 
         JwtAdminUsers jwtUsers = (JwtAdminUsers) userDetailsService.loadUserByUsername(vo.getAccount());
         if(!jwtUsers.getPassword().equals(DigestUtil.md5Hex(vo.getPassword())))
