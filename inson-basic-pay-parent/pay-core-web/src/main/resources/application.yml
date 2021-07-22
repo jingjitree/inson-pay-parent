@@ -29,3 +29,13 @@ mybatis:
 
 logging:
   config: classpath:logback-black.xml
+
+swagger:
+  title: ${spring.application.name}
+  description: 聚合支付系统api
+  version: 1.0.0
+  contact:
+    name: jingjitree
+    email: jingjitree@gmail.com
+  exclude-path:
+    - /error

@@ -11,3 +11,6 @@ spring:
 pay:
   baseUrl: http://api3.taotaoshi.cn/notify
 
+
+swagger:
+  enabled: true
