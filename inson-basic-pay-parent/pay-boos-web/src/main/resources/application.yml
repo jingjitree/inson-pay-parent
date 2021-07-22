@@ -52,3 +52,19 @@ jwt:
   # 验证码
   onlineKey: code-key
 
+swagger:
+  title: ${spring.application.name}
+  description: 管理端后台接口
+  version: 1.0.0
+  contact:
+    name: jingjitree
+    email: jingjitree@gmail.com
+  global-operation-parameters:
+    - name: Authorization
+      description: 登陆令牌
+      modelRef: string
+      parameterType: header
+      required: true
+  exclude-path:
+    - /error
+

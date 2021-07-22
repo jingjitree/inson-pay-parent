@@ -23,12 +23,6 @@
             <artifactId>basic-data</artifactId>
         </dependency>
 
-        <!--引入swagger-ui-->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-        </dependency>
-
     </dependencies>
 
     <build>
