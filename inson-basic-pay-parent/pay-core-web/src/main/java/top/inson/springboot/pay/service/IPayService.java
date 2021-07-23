@@ -1,7 +1,7 @@
 package top.inson.springboot.pay.service;
 
-import top.inson.springboot.pay.entity.dto.*;
-import top.inson.springboot.pay.entity.vo.*;
+import top.inson.springboot.paycommon.entity.dto.*;
+import top.inson.springboot.paycommon.entity.vo.*;
 
 public interface IPayService {
 

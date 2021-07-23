@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import top.inson.springboot.common.entity.response.CommonResult;
 import top.inson.springboot.common.exception.BadBusinessException;
 import top.inson.springboot.pay.annotation.PayCheckSign;
-import top.inson.springboot.pay.entity.dto.*;
-import top.inson.springboot.pay.entity.vo.*;
+import top.inson.springboot.paycommon.entity.dto.*;
+import top.inson.springboot.paycommon.entity.vo.*;
 import top.inson.springboot.pay.service.IPayService;
 import top.inson.springboot.utils.NetUtils;
 
