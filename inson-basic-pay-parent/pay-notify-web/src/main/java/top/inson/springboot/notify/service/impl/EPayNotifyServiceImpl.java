@@ -70,7 +70,11 @@ public class EPayNotifyServiceImpl implements IEPayNotifyService {
         switch (payState){
             case "00":
                 orderEnum = PayOrderStatusEnum.PAY_SUCCESS;
-                payTime = DateUtil.parse((String)notifyMap.get("payTime"), DatePattern.PURE_DATETIME_PATTERN);
+                try {
+                    payTime = DateUtil.parse((String)notifyMap.get("payTime"), DatePattern.PURE_DATETIME_PATTERN);
+                }catch (Exception e){
+                    payTime = DateUtil.date();
+                }
                 break;
             case "01":
                 orderEnum = PayOrderStatusEnum.PAY_FAIL;

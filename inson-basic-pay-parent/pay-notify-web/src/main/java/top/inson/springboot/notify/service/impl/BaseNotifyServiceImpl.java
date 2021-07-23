@@ -1,6 +1,12 @@
 package top.inson.springboot.notify.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.http.ContentType;
+import cn.hutool.http.Header;
+import cn.hutool.http.HttpResponse;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -10,13 +16,23 @@ import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 import top.inson.springboot.data.dao.IPayOrderMapper;
 import top.inson.springboot.data.dao.IRefundOrderMapper;
+import top.inson.springboot.data.entity.MerCashier;
 import top.inson.springboot.data.entity.PayOrder;
 import top.inson.springboot.data.entity.RefundOrder;
 import top.inson.springboot.data.enums.PayOrderStatusEnum;
 import top.inson.springboot.data.enums.RefundStatusEnum;
+import top.inson.springboot.data.enums.SignTypeEnum;
+import top.inson.springboot.notify.constant.RabbitmqConstant;
+import top.inson.springboot.notify.mq.MqSender;
 import top.inson.springboot.notify.service.IBaseNotifyService;
+import top.inson.springboot.paycommon.entity.dto.PayNotifyDto;
+import top.inson.springboot.paycommon.service.IPayCacheService;
+import top.inson.springboot.utils.AmountUtil;
+import top.inson.springboot.utils.HttpUtils;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Slf4j
@@ -26,6 +42,16 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
     private IPayOrderMapper payOrderMapper;
     @Autowired
     private IRefundOrderMapper refundOrderMapper;
+
+
+    @Autowired
+    private IPayCacheService payCacheService;
+
+
+    @Autowired
+    private MqSender mqSender;
+    @Autowired
+    private RabbitmqConstant mqConstant;
 
 
     private final Gson gson = new GsonBuilder().create();
@@ -48,10 +74,52 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
             if (StrUtil.isNotBlank(upOrder.getOrderNo()))
                 upOrder.setOrderNo(null);
             log.info("更新订单参数upOrder: {}", gson.toJson(upOrder));
+            BeanUtil.copyProperties(upOrder, payOrder);
             payOrderMapper.updateByExampleSelective(upOrder, example);
         }
         //通知下游商户
+        this.notifyPayOrderDown(payOrder);
+    }
 
+    private void notifyPayOrderDown(PayOrder payOrder) {
+        String notifyUrl = payOrder.getNotifyUrl();
+        MerCashier merCashier = payCacheService.getCashier(payOrder.getCashier());
+        PayNotifyDto notifyDto = new PayNotifyDto();
+        BeanUtil.copyProperties(payOrder, notifyDto);
+        notifyDto.setChOrderNo(null)
+                .setPreChOrderNo(null)
+                .setPayMoney(AmountUtil.changeYuanToFen(payOrder.getPayAmount()));
+        String reqJson = gson.toJson(notifyDto);
+        SignTypeEnum signTypeEnum = SignTypeEnum.getCategory(merCashier.getSignType());
+        String signParams = reqJson + "&key=" + merCashier.getSignKey();
+        log.info("签名参数signParams：{}", signParams);
+        //构建回调请求头
+        Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())
+                .put(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue())
+                .put("signType", signTypeEnum.getDesc())
+                .put("paySign", DigestUtil.md5Hex(signParams).toUpperCase())
+                .build();
+        HttpResponse response = null;
+        try {
+             response = HttpUtils.sendPostJson(notifyUrl, headers, reqJson);
+        } catch (Exception e) {
+            log.error("通知下游异常", e);
+        }
+        if (response != null && response.isOk()) {
+            String body = response.body();
+            log.info("下游通知结果：" + body);
+            if ("SUCCESS".equalsIgnoreCase(body)) {
+                log.info("通知成功orderNo：" + payOrder.getOrderNo());
+                return;
+            }
+        }
+        Map<String, Object> mqNotifyMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("notifyUrl", notifyUrl)
+                .put("data", notifyDto)
+                .put("headers", headers)
+                .build();
+        String mqJson = gson.toJson(mqNotifyMap);
+        mqSender.send(mqConstant.getPayDelayExchange(), mqConstant.getPayDelayRoutingKey(), mqJson, 50000);
     }
 
     @Transactional(rollbackFor = Exception.class)
