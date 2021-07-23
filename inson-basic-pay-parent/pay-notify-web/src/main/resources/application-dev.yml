@@ -9,5 +9,12 @@ spring:
     host: 192.168.1.254
     port: 6379
 
+  #rabbitmq配置
+  rabbitmq:
+    host: 192.168.1.254
+    username: tree
+    password: tree
+    port: 5672
+
 pay:
   baseUrl: http://api3.taotaoshi.cn/notify

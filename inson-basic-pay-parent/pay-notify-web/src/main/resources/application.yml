@@ -24,6 +24,10 @@ spring:
     database: 1
     timeout: 1000
 
+  #rabbitmq配置
+  rabbitmq:
+    virtual-host: /tree_insonpay
+
 mybatis:
   config-location: classpath:mybatis-config.xml
   type-aliases-package: top.inson.springboot.data.entity
@@ -31,3 +35,14 @@ mybatis:
 
 logging:
   config: classpath:logback-black.xml
+
+#rabbitmq队列和交换机配置
+trade:
+  queue:
+    payDelayQueue: pay_delay_queue
+    payDelayExchange: pay_delay_exchange
+    payDelayRoutingKey: pay_delay_key
+
+    payQueue: pay_queue
+    payExchange: pay_exchange
+    payRoutingKey: pay_key
