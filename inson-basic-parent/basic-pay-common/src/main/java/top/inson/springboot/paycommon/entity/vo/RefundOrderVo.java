@@ -14,20 +14,20 @@ import javax.validation.constraints.NotNull;
 @ApiModel(value = "退款请求数据实体")
 public class RefundOrderVo extends PayBaseVo implements java.io.Serializable{
 
-    @ApiModelProperty(value = "平台订单号")
+    @ApiModelProperty(value = "平台订单号", required = true)
     @NotBlank(message = "支付订单号不能为空")
     private String orderNo;
 
-    @ApiModelProperty(value = "退款订单号")
+    @ApiModelProperty(value = "退款订单号", required = true)
     @NotBlank(message = "退款订单号不能为空")
     private String mchRefundNo;
 
-    @ApiModelProperty(value = "退款金额")
+    @ApiModelProperty(value = "退款金额", required = true)
     @NotNull(message = "退款金额必传")
     @Min(value = 1, message = "退款金额有误")
     private Integer refundMoney;
 
-    @ApiModelProperty(value = "退款回调地址")
+    @ApiModelProperty(value = "退款回调地址", required = true)
     @NotBlank(message = "退款回调地址不能为空")
     private String notifyUrl;
 

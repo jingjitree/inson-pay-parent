@@ -21,7 +21,7 @@ import top.inson.springboot.data.enums.RefundStatusEnum;
 import top.inson.springboot.paycommon.entity.dto.*;
 import top.inson.springboot.paycommon.entity.vo.*;
 import top.inson.springboot.pay.enums.PayBadBusinessEnum;
-import top.inson.springboot.pay.service.IPayCacheService;
+import top.inson.springboot.paycommon.service.IPayCacheService;
 import top.inson.springboot.pay.service.IPayService;
 import top.inson.springboot.pay.service.channel.IChannelService;
 import top.inson.springboot.pay.strategy.IStrategyService;

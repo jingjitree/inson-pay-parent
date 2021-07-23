@@ -1,4 +1,4 @@
-package top.inson.springboot.pay.service;
+package top.inson.springboot.paycommon.service;
 
 import top.inson.springboot.data.entity.MerCashier;
 

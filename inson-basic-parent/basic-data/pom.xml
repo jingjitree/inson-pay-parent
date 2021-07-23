@@ -27,6 +27,16 @@
         <dependency>
             <groupId>top.inson.springboot</groupId>
             <artifactId>basic-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

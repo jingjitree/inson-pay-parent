@@ -1,4 +1,4 @@
-package top.inson.springboot.pay.constant;
+package top.inson.springboot.paycommon.constant;
 
 
 import lombok.AccessLevel;

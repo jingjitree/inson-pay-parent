@@ -19,7 +19,17 @@
     <dependencies>
         <dependency>
             <groupId>top.inson.springboot</groupId>
-            <artifactId>basic-util</artifactId>
+            <artifactId>basic-data</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

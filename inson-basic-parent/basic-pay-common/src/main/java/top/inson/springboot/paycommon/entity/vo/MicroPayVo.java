@@ -15,26 +15,26 @@ import javax.validation.constraints.NotBlank;
 @ApiModel(value = "被扫请求参数")
 public class MicroPayVo extends PayBaseVo implements java.io.Serializable{
 
-    @ApiModelProperty(value = "支付金额（单位：分）")
+    @ApiModelProperty(value = "支付金额（单位：分）", required = true)
     @Min(value = 1, message = "最小支付金额一分")
     private Integer payMoney;
 
-    @ApiModelProperty(value = "商户订单号")
+    @ApiModelProperty(value = "商户订单号", required = true)
     @NotBlank(message = "商户订单号不允许为空")
     private String mchOrderNo;
 
-    @ApiModelProperty(value = "订单标题")
+    @ApiModelProperty(value = "订单标题", required = true)
     @NotBlank(message = "订单标题不能为空")
     private String body;
 
     @ApiModelProperty(value = "订单描述")
     private String subject;
 
-    @ApiModelProperty(value = "回调接收地址")
+    @ApiModelProperty(value = "回调接收地址", required = true)
     @NotBlank(message = "回调地址不允许为空")
     private String notifyUrl;
 
-    @ApiModelProperty(value = "付款码")
+    @ApiModelProperty(value = "付款码", required = true)
     @NotBlank(message = "付款码不能为空")
     private String authCode;
 

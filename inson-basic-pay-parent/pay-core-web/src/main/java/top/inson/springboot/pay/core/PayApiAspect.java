@@ -19,7 +19,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import top.inson.springboot.common.exception.BadRequestException;
 import top.inson.springboot.data.entity.MerCashier;
-import top.inson.springboot.pay.service.IPayCacheService;
+import top.inson.springboot.paycommon.service.IPayCacheService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.annotation.Annotation;
