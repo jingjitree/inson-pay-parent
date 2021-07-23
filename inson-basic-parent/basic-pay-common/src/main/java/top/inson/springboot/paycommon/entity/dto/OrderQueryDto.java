@@ -1,4 +1,4 @@
-package top.inson.springboot.pay.entity.dto;
+package top.inson.springboot.paycommon.entity.dto;
 
 
 import io.swagger.annotations.ApiModel;

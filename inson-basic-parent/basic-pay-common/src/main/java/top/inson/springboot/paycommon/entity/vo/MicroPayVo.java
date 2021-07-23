@@ -1,4 +1,4 @@
-package top.inson.springboot.pay.entity.vo;
+package top.inson.springboot.paycommon.entity.vo;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

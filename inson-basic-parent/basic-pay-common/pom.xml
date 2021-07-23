@@ -21,5 +21,10 @@
             <groupId>top.inson.springboot</groupId>
             <artifactId>basic-util</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-models</artifactId>
+        </dependency>
     </dependencies>
 </project>
