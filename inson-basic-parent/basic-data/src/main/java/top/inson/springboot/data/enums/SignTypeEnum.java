@@ -12,6 +12,15 @@ public enum SignTypeEnum {
     RSA2(3,"RSA2")
     ;
 
+    public static SignTypeEnum getCategory(Integer code){
+        if (code == null)
+            return null;
+        for (SignTypeEnum en : SignTypeEnum.values()) {
+            if (code.equals(en.getCode()))
+                return en;
+        }
+        return null;
+    }
 
     private final int code;
     private final String desc;
