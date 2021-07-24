@@ -26,6 +26,7 @@ import top.inson.springboot.data.enums.SignTypeEnum;
 import top.inson.springboot.notify.constant.RabbitmqConstant;
 import top.inson.springboot.notify.mq.MqSender;
 import top.inson.springboot.notify.service.IBaseNotifyService;
+import top.inson.springboot.paycommon.constant.PayMqConstant;
 import top.inson.springboot.paycommon.entity.dto.PayNotifyDto;
 import top.inson.springboot.paycommon.entity.dto.RefundNotifyDto;
 import top.inson.springboot.paycommon.service.IPayCacheService;
@@ -112,10 +113,10 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
             }
         }
         Map<String, Object> mqNotifyMap = MapUtil.builder(new HashMap<String, Object>())
-                .put("notifyUrl", notifyUrl)
-                .put("data", notifyDto)
-                .put("headers", headers)
-                .put("notifyCount", 1)
+                .put(PayMqConstant.NOTIFY_URL, notifyUrl)
+                .put(PayMqConstant.NOTIFY_DATA, notifyDto)
+                .put(PayMqConstant.NOTIFY_HEADERS, headers)
+                .put(PayMqConstant.NOTIFY_COUNT, 1)
                 .build();
         String mqJson = gson.toJson(mqNotifyMap);
         mqSender.send(mqConstant.getPayDelayExchange(), mqConstant.getPayDelayRoutingKey(), mqJson, 1000);
@@ -206,10 +207,10 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
             }
         }
         Map<String, Object> mqNotifyMap = MapUtil.builder(new HashMap<String, Object>())
-                .put("notifyUrl", notifyUrl)
-                .put("data", notifyDto)
-                .put("headers", headers)
-                .put("notifyCount", 1)
+                .put(PayMqConstant.NOTIFY_URL, notifyUrl)
+                .put(PayMqConstant.NOTIFY_DATA, notifyDto)
+                .put(PayMqConstant.NOTIFY_HEADERS, headers)
+                .put(PayMqConstant.NOTIFY_COUNT, 1)
                 .build();
         String mqJson = gson.toJson(mqNotifyMap);
         mqSender.send(mqConstant.getPayDelayExchange(), mqConstant.getRefundDelayRoutingKey(), mqJson, 1000);
