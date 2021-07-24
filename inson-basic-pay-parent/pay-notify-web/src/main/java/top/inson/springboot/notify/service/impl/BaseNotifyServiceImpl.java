@@ -1,6 +1,7 @@
 package top.inson.springboot.notify.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
@@ -26,6 +27,7 @@ import top.inson.springboot.notify.constant.RabbitmqConstant;
 import top.inson.springboot.notify.mq.MqSender;
 import top.inson.springboot.notify.service.IBaseNotifyService;
 import top.inson.springboot.paycommon.entity.dto.PayNotifyDto;
+import top.inson.springboot.paycommon.entity.dto.RefundNotifyDto;
 import top.inson.springboot.paycommon.service.IPayCacheService;
 import top.inson.springboot.utils.AmountUtil;
 import top.inson.springboot.utils.HttpUtils;
@@ -74,7 +76,9 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
             if (StrUtil.isNotBlank(upOrder.getOrderNo()))
                 upOrder.setOrderNo(null);
             log.info("更新订单参数upOrder: {}", gson.toJson(upOrder));
-            BeanUtil.copyProperties(upOrder, payOrder);
+            BeanUtil.copyProperties(upOrder, payOrder,
+                    CopyOptions.create().setIgnoreNullValue(true)
+            );
             payOrderMapper.updateByExampleSelective(upOrder, example);
         }
         //通知下游商户
@@ -89,19 +93,13 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
         notifyDto.setChOrderNo(null)
                 .setPreChOrderNo(null)
                 .setPayMoney(AmountUtil.changeYuanToFen(payOrder.getPayAmount()));
-        String reqJson = gson.toJson(notifyDto);
-        SignTypeEnum signTypeEnum = SignTypeEnum.getCategory(merCashier.getSignType());
-        String signParams = reqJson + "&key=" + merCashier.getSignKey();
-        log.info("签名参数signParams：{}", signParams);
-        //构建回调请求头
-        Map<String, String> headers = MapUtil.builder(new HashMap<String, String>())
-                .put(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue())
-                .put("signType", signTypeEnum.getDesc())
-                .put("paySign", DigestUtil.md5Hex(signParams).toUpperCase())
-                .build();
+        String notifyJson = gson.toJson(notifyDto);
+
+        Map<String, String> headers = null;
         HttpResponse response = null;
         try {
-             response = HttpUtils.sendPostJson(notifyUrl, headers, reqJson);
+            headers = this.buildNotifyHeader(notifyJson, merCashier);
+            response = HttpUtils.sendPostJson(notifyUrl, headers, notifyJson);
         } catch (Exception e) {
             log.error("通知下游异常", e);
         }
@@ -117,9 +115,22 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
                 .put("notifyUrl", notifyUrl)
                 .put("data", notifyDto)
                 .put("headers", headers)
+                .put("notifyCount", 1)
                 .build();
         String mqJson = gson.toJson(mqNotifyMap);
-        mqSender.send(mqConstant.getPayDelayExchange(), mqConstant.getPayDelayRoutingKey(), mqJson, 50000);
+        mqSender.send(mqConstant.getPayDelayExchange(), mqConstant.getPayDelayRoutingKey(), mqJson, 1000);
+    }
+
+    private Map<String, String> buildNotifyHeader(String notifyJson, MerCashier merCashier) {
+        SignTypeEnum signTypeEnum = SignTypeEnum.getCategory(merCashier.getSignType());
+        String signParams = notifyJson + "&key=" + merCashier.getSignKey();
+        log.info("回调签名参数signParams：{}", signParams);
+        //构建回调请求头
+        return MapUtil.builder(new HashMap<String, String>())
+                .put(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue())
+                .put("signType", signTypeEnum.getDesc())
+                .put("paySign", DigestUtil.md5Hex(signParams).toUpperCase())
+                .build();
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -164,6 +175,44 @@ public class BaseNotifyServiceImpl implements IBaseNotifyService {
             }
         }
         //通知下游
+        BeanUtil.copyProperties(upOrder, refundOrder,
+                CopyOptions.create().setIgnoreNullValue(true)
+        );
+        this.notifyRefundOrderDown(refundOrder);
+    }
+
+    private void notifyRefundOrderDown(RefundOrder refundOrder) {
+        String notifyUrl = refundOrder.getNotifyUrl();
+        MerCashier merCashier = payCacheService.getCashier(refundOrder.getCashier());
+        RefundNotifyDto notifyDto = new RefundNotifyDto();
+        BeanUtil.copyProperties(refundOrder, notifyDto);
+        notifyDto
+                .setRefundMoney(AmountUtil.changeYuanToFen(refundOrder.getRefundAmount()));
+        String notifyJson = gson.toJson(notifyDto);
+        Map<String, String> headers = null;
+        HttpResponse response = null;
+        try {
+            headers = this.buildNotifyHeader(notifyJson, merCashier);
+            response = HttpUtils.sendPostJson(notifyUrl, headers, notifyJson);
+        }catch (Exception e){
+            log.error("退款通知异常", e);
+        }
+        if (response != null && response.isOk()) {
+            String body = response.body();
+            log.info("下游通知结果：" + body);
+            if ("SUCCESS".equalsIgnoreCase(body)) {
+                log.info("通知成功refundNo：" + refundOrder.getRefundNo());
+                return;
+            }
+        }
+        Map<String, Object> mqNotifyMap = MapUtil.builder(new HashMap<String, Object>())
+                .put("notifyUrl", notifyUrl)
+                .put("data", notifyDto)
+                .put("headers", headers)
+                .put("notifyCount", 1)
+                .build();
+        String mqJson = gson.toJson(mqNotifyMap);
+        mqSender.send(mqConstant.getPayDelayExchange(), mqConstant.getRefundDelayRoutingKey(), mqJson, 1000);
     }
 
 }

@@ -29,6 +29,12 @@ public class MqCustomer {
 
     }
 
+    @RabbitListener(queues = "${trade.queue.refundDelayQueue}")
+    public void refundQueueListener(Message message){
+        String msg = new String(message.getBody(), Charset.defaultCharset());
+        log.info("退款延迟队列接收到msg：{}", msg);
+    }
+
 
 
 }

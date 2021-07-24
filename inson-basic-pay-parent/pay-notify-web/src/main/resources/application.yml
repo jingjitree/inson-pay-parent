@@ -40,8 +40,10 @@ logging:
 trade:
   queue:
     payDelayQueue: pay_delay_queue
+    refundDelayQueue: refund_delay_queue
     payDelayExchange: pay_delay_exchange
     payDelayRoutingKey: pay_delay_key
+    refundDelayRoutingKey: refund_delay_key
 
     payQueue: pay_queue
     payExchange: pay_exchange

@@ -49,6 +49,14 @@ public class RabbitmqConfiguration {
                 .build();
         return new Queue(mqConstant.getPayDelayQueue(), true, false, false, params);
     }
+    @Bean
+    public Queue refundDelayQueue(){
+        Map<String, Object> params = MapUtil.builder(new HashMap<String, Object>())
+                .put("x-dead-letter-exchange", mqConstant.getPayDelayExchange())
+                .put("x-dead-letter-routing-key", mqConstant.getRefundDelayRoutingKey())
+                .build();
+        return new Queue(mqConstant.getRefundDelayQueue(), true, false, false, params);
+    }
 
     @Bean
     public DirectExchange delayExchange(){
@@ -58,6 +66,10 @@ public class RabbitmqConfiguration {
     @Bean
     public Binding delayBinding(){
         return BindingBuilder.bind(delayQueue()).to(delayExchange()).with(mqConstant.getPayDelayRoutingKey());
+    }
+    @Bean
+    public Binding refundDelayBinding(){
+        return BindingBuilder.bind(refundDelayQueue()).to(delayExchange()).with(mqConstant.getRefundDelayRoutingKey());
     }
 
 }

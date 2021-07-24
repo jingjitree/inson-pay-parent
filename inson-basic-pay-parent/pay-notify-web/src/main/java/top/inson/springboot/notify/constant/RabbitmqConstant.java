@@ -14,8 +14,10 @@ import org.springframework.stereotype.Component;
 public class RabbitmqConstant {
 
     private String payDelayQueue;
+    private String refundDelayQueue;
     private String payDelayExchange;
     private String payDelayRoutingKey;
+    private String refundDelayRoutingKey;
 
     private String payQueue;
     private String payExchange;
