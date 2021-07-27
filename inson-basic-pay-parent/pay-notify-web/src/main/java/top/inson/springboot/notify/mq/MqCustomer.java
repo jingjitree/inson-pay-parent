@@ -62,8 +62,8 @@ public class MqCustomer {
             log.info("已超过最大通知次数" + notifyCount);
             return;
         }
-        int delayTime = ++notifyCount * 1000;
-        log.info("delayTime：" + delayTime);
+        int delayTime = ++notifyCount * 5 * 1000;
+        log.info("队列delayTime：" + delayTime);
         String notifyUrl = msgObj.get(PayMqConstant.NOTIFY_URL).getAsString();
         JsonObject jsonDataObj = msgObj.get(PayMqConstant.NOTIFY_DATA).getAsJsonObject();
         log.info("队列jsonData:{}", jsonDataObj);
@@ -88,7 +88,7 @@ public class MqCustomer {
         }
         msgObj.remove(PayMqConstant.NOTIFY_COUNT);
         msgObj.addProperty(PayMqConstant.NOTIFY_COUNT, notifyCount);
-        mqSender.send(mqConstant.getPayDelayExchange(), mqConstant.getRefundDelayRoutingKey(), msgObj.toString(), delayTime);
+        mqSender.send(mqConstant.getPayDelayExchange(), delayRoutingKey, msgObj.toString(), delayTime);
     }
 
 
