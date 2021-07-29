@@ -19,8 +19,8 @@ public class JwtConstants {
 
     private Long expiration;
 
-    private String online;
-
     private String onlineKey;
+
+    private String codeKey;
 
 }
