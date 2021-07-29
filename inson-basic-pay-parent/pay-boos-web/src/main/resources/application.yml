@@ -1,5 +1,7 @@
 server:
   port: 9092
+  servlet:
+    context-path: /boos
 
 spring:
   application:
@@ -48,9 +50,32 @@ jwt:
   # token 过期时间 2个小时
   expiration: 7200000
   # 在线用户key
-  online: online-token
+  onlineKey: online-token-
   # 验证码
-  onlineKey: code-key
+  codeKey: code-key-
+
+# 登录相关配置
+login:
+  # 登录缓存
+  cache-enable: true
+  #  是否限制单用户登录
+  single-login: false
+  #  验证码
+  login-code:
+    #  验证码类型配置 查看 LoginProperties 类
+    code-type: arithmetic
+    #  登录图形验证码有效时间/分钟
+    expiration: 2
+    #  验证码高度
+    width: 111
+    #  验证码宽度
+    height: 36
+    # 内容长度
+    length: 2
+    # 字体名称，为空则使用默认字体
+    font-name:
+    # 字体大小
+    font-size: 25
 
 swagger:
   title: ${spring.application.name}
