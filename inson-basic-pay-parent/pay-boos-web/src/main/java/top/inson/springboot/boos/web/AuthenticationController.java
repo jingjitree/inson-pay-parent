@@ -1,27 +1,34 @@
 package top.inson.springboot.boos.web;
 
 
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.google.common.collect.Maps;
+import com.wf.captcha.base.Captcha;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import top.inson.springboot.boos.entity.vo.AdminLoginVo;
 import top.inson.springboot.boos.security.entity.JwtAdminUsers;
+import top.inson.springboot.boos.util.captche.LoginCodeEnum;
+import top.inson.springboot.boos.util.captche.LoginProperties;
 import top.inson.springboot.common.entity.response.CommonResult;
 import top.inson.springboot.security.annotation.AnonymousAccess;
+import top.inson.springboot.security.constants.JwtConstants;
 import top.inson.springboot.security.service.IOnlineUserService;
 import top.inson.springboot.security.utils.JwtTokenUtil;
+import top.inson.springboot.utils.RedisUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.Map;
 
 
+@Slf4j
 @Api(tags = "系统授权")
 @RestController
 @RequestMapping(value = "/authentication")
@@ -32,6 +39,15 @@ public class AuthenticationController {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private IOnlineUserService<JwtAdminUsers> onlineUserService;
+
+
+    @Autowired
+    private LoginProperties loginProperties;
+    @Autowired
+    private JwtConstants jwtConstants;
+    @Autowired
+    private RedisUtils redisUtils;
+
 
 
     @ApiOperation(value = "登录接口")
@@ -51,6 +67,27 @@ public class AuthenticationController {
 
         onlineUserService.saveUser(jwtUsers, token, request);
 
+        return CommonResult.success(result);
+    }
+
+
+    @ApiOperation(value = "获取图形验证码")
+    @AnonymousAccess
+    @GetMapping("/getCode")
+    public CommonResult<Map<String, Object>> getCode(){
+        Captcha captcha = loginProperties.getCaptcha();
+        String codeUuid = jwtConstants.getCodeKey() + IdUtil.simpleUUID();
+        //当验证码类型为 arithmetic时且长度 >= 2 时，captcha.text()的结果有几率为浮点型
+        String captchaValue = captcha.text();
+        if (captcha.getCharType() - 1 == LoginCodeEnum.arithmetic.ordinal() && captchaValue.contains(".")) {
+            captchaValue = captchaValue.split("\\.")[0];
+        }
+        //存入redis中
+        log.debug("验证码存入redisKey:{}，code：{}", codeUuid, captchaValue);
+        Map<String, Object> result = MapUtil.builder(new HashMap<String, Object>())
+                .put("img", captcha.toBase64())
+                .put("codeUuid", codeUuid)
+                .build();
         return CommonResult.success(result);
     }
 
