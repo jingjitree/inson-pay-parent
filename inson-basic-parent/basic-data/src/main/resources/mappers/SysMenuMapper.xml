@@ -2,5 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="top.inson.springboot.data.dao.ISysMenuMapper">
 
+    <select id="selectUserRoleMenu" resultType="top.inson.springboot.data.entity.SysMenu" parameterType="int">
+        select sm.* from sys_menu sm
+        right join sys_roles_menus srm on sm.id = srm.menu_id
+        right join sys_users_roles sur on srm.role_id = sur.role_id
+        where sur.user_id = #{usersId}
+    </select>
+
 
 </mapper>
