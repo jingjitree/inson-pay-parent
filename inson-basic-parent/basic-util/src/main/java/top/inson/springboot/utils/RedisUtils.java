@@ -72,6 +72,10 @@ public class RedisUtils {
         Long ret = redisTemplate.delete(keys);
         return ret == null ? 0 : ret;
     }
+
+    public boolean hasKey(final String key){
+        return redisTemplate.hasKey(key);
+    }
  
     /**
      * 存入普通对象
