@@ -7,13 +7,10 @@ import org.springframework.stereotype.Service;
 import top.inson.springboot.boos.security.entity.JwtAdminUsers;
 import top.inson.springboot.security.constants.JwtConstants;
 import top.inson.springboot.security.constants.SecurityConstants;
-import top.inson.springboot.security.entity.OnlineUser;
 import top.inson.springboot.security.service.IOnlineUserService;
-import top.inson.springboot.utils.NetUtils;
 import top.inson.springboot.utils.RedisUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 
@@ -28,11 +25,13 @@ public class OnlineUserServiceImpl implements IOnlineUserService<JwtAdminUsers> 
     private final Gson gson = new GsonBuilder().create();
     @Override
     public void saveUser(JwtAdminUsers jwtAdminUsers ,String token, HttpServletRequest request) {
+        /*
         String ip = NetUtils.getIp(request);
         OnlineUser onlineUser = new OnlineUser(jwtAdminUsers.getUsername(), jwtAdminUsers.getAccount(),
                 ip, token, new Date());
-        String prefixKey = String.format(SecurityConstants.PREFIX_USER_CACHE, jwtAdminUsers.getId());
-        redisUtils.setValueTimeout(prefixKey, gson.toJson(onlineUser),
+        */
+        String prefixKey = String.format(SecurityConstants.PREFIX_USER_CACHE, token);
+        redisUtils.setValueTimeout(prefixKey, gson.toJson(jwtAdminUsers.setPassword(null)),
                 jwtConstants.getExpiration(), TimeUnit.MILLISECONDS);
     }
 

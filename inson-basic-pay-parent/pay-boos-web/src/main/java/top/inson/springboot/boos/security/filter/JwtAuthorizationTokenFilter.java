@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import top.inson.springboot.boos.security.entity.JwtAdminUsers;
 import top.inson.springboot.security.constants.JwtConstants;
+import top.inson.springboot.security.constants.SecurityConstants;
 import top.inson.springboot.security.core.AbstractJwtAuthorizationTokenFilter;
 import top.inson.springboot.security.utils.JwtTokenUtil;
 import top.inson.springboot.utils.RedisUtils;
@@ -21,7 +22,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 
 
 @Slf4j
@@ -39,27 +39,32 @@ public class JwtAuthorizationTokenFilter extends AbstractJwtAuthorizationTokenFi
 
     private final Gson gson = new GsonBuilder().create();
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
         String token = jwtTokenUtil.getToken(request);
-        log.info("请求的token：" + token);
-        Map<String, Object> tokenMap = null;
-        try {
-            if(StrUtil.isNotBlank(token))
-                tokenMap = jwtTokenUtil.getMapFromToken(token);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-        if(tokenMap != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            JwtAdminUsers userDetails = (JwtAdminUsers) userDetailsService.loadUserByUsername((String) tokenMap.get("sub"));
-            userDetails.setPassword(null);
-            if(jwtTokenUtil.validateToken(token)){
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        if(StrUtil.isNotBlank(token)){
+            log.info("请求的token：" + token);
+            //从redis中取出缓存
+            JwtAdminUsers adminUsers = null;
+            try {
+                String tokenKey = String.format(SecurityConstants.PREFIX_USER_CACHE, token);
+                if (redisUtils.hasKey(tokenKey)){
+                    adminUsers = gson.fromJson(redisUtils.getValue(tokenKey).toString(), JwtAdminUsers.class);
+                }
+            }catch (Exception e){
+                log.error("读取缓存信息异常", e);
+            }
+            if (adminUsers != null){
+                if (jwtTokenUtil.validateToken(token)) {
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(adminUsers, null, adminUsers.getAuthorities());
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    //token续期
+
+                }
             }
         }
-
         //请求继续
         chain.doFilter(request, response);
     }

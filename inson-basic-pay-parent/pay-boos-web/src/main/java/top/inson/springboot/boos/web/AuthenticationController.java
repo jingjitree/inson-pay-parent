@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import top.inson.springboot.boos.entity.vo.AdminLoginVo;
 import top.inson.springboot.boos.security.entity.JwtAdminUsers;
+import top.inson.springboot.boos.security.utils.SecurityUtils;
 import top.inson.springboot.boos.util.captche.LoginCodeEnum;
 import top.inson.springboot.boos.util.captche.LoginProperties;
 import top.inson.springboot.common.entity.response.CommonResult;
@@ -73,6 +74,12 @@ public class AuthenticationController {
         onlineUserService.saveUser(jwtUsers, token, request);
 
         return CommonResult.success(result);
+    }
+
+    @ApiOperation(value = "查询用户信息")
+    @GetMapping("/getUserInfo")
+    public CommonResult<JwtAdminUsers> getUserInfo(){
+        return CommonResult.success(SecurityUtils.principal());
     }
 
     private void validImgCode(AdminLoginVo vo) {
