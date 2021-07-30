@@ -21,7 +21,7 @@ spring:
       max-idle: 8
       #连接池中最小空闲连接
       min-idle: 0
-    database: 0
+    database: 6
     timeout: 1000
 
 mybatis:
