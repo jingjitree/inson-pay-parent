@@ -8,4 +8,6 @@ public interface IOnlineUserService<T extends UserDetails> {
 
     void saveUser(T t, String token, HttpServletRequest request);
 
+    void logout(String token);
+
 }

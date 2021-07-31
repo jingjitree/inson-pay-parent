@@ -35,4 +35,10 @@ public class OnlineUserServiceImpl implements IOnlineUserService<JwtAdminUsers> 
                 jwtConstants.getExpiration(), TimeUnit.MILLISECONDS);
     }
 
+    @Override
+    public void logout(String token) {
+        String redisKey = String.format(SecurityConstants.PREFIX_USER_CACHE, token);
+        redisUtils.delKey(redisKey);
+    }
+
 }

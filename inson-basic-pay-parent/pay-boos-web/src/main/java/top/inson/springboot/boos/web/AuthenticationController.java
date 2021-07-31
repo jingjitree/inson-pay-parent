@@ -114,5 +114,13 @@ public class AuthenticationController {
     }
 
 
+    @ApiOperation(value = "退出登录")
+    @GetMapping("/logout")
+    public CommonResult logout(HttpServletRequest request){
+        String token = jwtTokenUtil.getToken(request);
+        log.info("退出登录token:" + token);
+        onlineUserService.logout(token);
+        return CommonResult.success();
+    }
 
 }
