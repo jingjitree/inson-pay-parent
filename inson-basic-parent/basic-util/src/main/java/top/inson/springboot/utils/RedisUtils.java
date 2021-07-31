@@ -22,6 +22,15 @@ public class RedisUtils {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    /**
+     * 根据key获取过期时间
+     * @param key
+     * @return
+     */
+    public long getExpire(String key){
+        return redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    }
  
     /**
      * 设置有效时间

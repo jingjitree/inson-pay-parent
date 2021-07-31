@@ -23,4 +23,8 @@ public class JwtConstants {
 
     private String codeKey;
 
+    private Long detect;
+
+    private Long renew;
+
 }
