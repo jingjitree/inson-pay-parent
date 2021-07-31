@@ -7,11 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import top.inson.springboot.boos.security.entity.JwtAdminUsers;
-import top.inson.springboot.security.constants.JwtConstants;
+import top.inson.springboot.boos.security.utils.AdminTokenUtil;
 import top.inson.springboot.security.constants.SecurityConstants;
 import top.inson.springboot.security.core.AbstractJwtAuthorizationTokenFilter;
 import top.inson.springboot.security.utils.JwtTokenUtil;
@@ -32,9 +31,7 @@ public class JwtAuthorizationTokenFilter extends AbstractJwtAuthorizationTokenFi
     @Autowired
     private RedisUtils redisUtils;
     @Autowired
-    private JwtConstants jwtConstants;
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private AdminTokenUtil adminTokenUtil;
 
 
     private final Gson gson = new GsonBuilder().create();
@@ -46,8 +43,8 @@ public class JwtAuthorizationTokenFilter extends AbstractJwtAuthorizationTokenFi
             log.info("请求的token：" + token);
             //从redis中取出缓存
             JwtAdminUsers adminUsers = null;
+            String tokenKey = String.format(SecurityConstants.PREFIX_USER_CACHE, token);
             try {
-                String tokenKey = String.format(SecurityConstants.PREFIX_USER_CACHE, token);
                 if (redisUtils.hasKey(tokenKey)){
                     adminUsers = gson.fromJson(redisUtils.getValue(tokenKey).toString(), JwtAdminUsers.class);
                 }
@@ -61,7 +58,7 @@ public class JwtAuthorizationTokenFilter extends AbstractJwtAuthorizationTokenFi
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     //token续期
-
+                    adminTokenUtil.checkRenewal(tokenKey, token);
                 }
             }
         }

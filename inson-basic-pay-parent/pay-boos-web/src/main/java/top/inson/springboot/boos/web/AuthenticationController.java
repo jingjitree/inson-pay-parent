@@ -5,7 +5,6 @@ import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import com.google.common.collect.Maps;
 import com.wf.captcha.base.Captcha;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -68,8 +67,7 @@ public class AuthenticationController {
 
         //生成令牌
         String token = jwtTokenUtil.generateToken(jwtUsers);
-        Map<String, Object> result = Maps.newHashMap();
-        result.put("token", token);
+        Map<String, Object> result = MapUtil.of("token", token);
 
         onlineUserService.saveUser(jwtUsers, token, request);
 
