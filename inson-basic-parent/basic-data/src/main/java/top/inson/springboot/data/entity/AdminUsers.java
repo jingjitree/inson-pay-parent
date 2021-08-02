@@ -5,6 +5,7 @@ import lombok.Setter;
 import top.inson.springboot.common.entity.BaseEntity;
 
 import javax.persistence.Table;
+import java.util.Date;
 
 
 @Getter
@@ -12,11 +13,13 @@ import javax.persistence.Table;
 @Table(name = "admin_users")
 public class AdminUsers extends BaseEntity {
 
-    private String username;
-    private String account;
-    private String password;
+    private Integer avatarId;
     private String email;
+    private Boolean enabled;
+    private String password;
+    private String username;
+    private Integer deptId;
     private String phone;
-    private Boolean available;
-
+    private Integer jobId;
+    private Date lastPasswordResetTime;
 }
