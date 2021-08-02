@@ -2,6 +2,8 @@ package top.inson.springboot.boos.security.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import top.inson.springboot.security.service.IJwtUserDetailService;
 
 
 @Service
+@CacheConfig(cacheNames = "jwtUserDetail")
 public class JwtUserDetailServiceImpl implements IJwtUserDetailService {
     @Autowired
     private IAdminUsersMapper adminUsersMapper;
@@ -22,6 +25,7 @@ public class JwtUserDetailServiceImpl implements IJwtUserDetailService {
 
 
     @Override
+    @Cacheable(key = "'jwtAdminUsers:' + #p0")
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
         AdminUsersDto usersDto = adminUsersMapper.selectUserByUsername(s);
         if(usersDto == null){
