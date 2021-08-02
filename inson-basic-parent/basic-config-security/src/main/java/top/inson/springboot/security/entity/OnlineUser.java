@@ -14,8 +14,6 @@ public class OnlineUser {
 
     private String userName;
 
-    private String account;
-
     private String ip;
 
     private String key;
