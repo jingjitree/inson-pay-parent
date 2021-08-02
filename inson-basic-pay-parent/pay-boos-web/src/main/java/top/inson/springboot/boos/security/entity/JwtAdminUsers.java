@@ -1,5 +1,6 @@
 package top.inson.springboot.boos.security.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -8,29 +9,41 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Getter
 @Setter
 @Accessors(chain = true)
 public class JwtAdminUsers implements UserDetails {
-
     private Integer id;
-    private String trueUsername;
-    private String account;
+
+    private String username;
+
     private String password;
+
+    private String avatar;
+
     private String email;
+
     private String phone;
-    private Boolean available;
+
+    private String deptName;
+
+    private String jobName;
+
+    private boolean enabled;
+
     private Date createTime;
     private Date updateTime;
 
+    private Date lastPasswordResetDate;
+
+    @JsonIgnore
     private Collection<GrantedAuthority> authorities;
 
-    @Override
-    public String getUsername() {
-        return account;
-    }
+    private List<String> roles;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -45,8 +58,7 @@ public class JwtAdminUsers implements UserDetails {
         return false;
     }
 
-    @Override
-    public boolean isEnabled() {
-        return available;
+    public List<String> getRoles() {
+        return authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
     }
 }

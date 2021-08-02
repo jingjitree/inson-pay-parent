@@ -67,7 +67,10 @@ public class AuthenticationController {
 
         //生成令牌
         String token = jwtTokenUtil.generateToken(jwtUsers);
-        Map<String, Object> result = MapUtil.of("token", token);
+        Map<String, Object> result = MapUtil.builder(new HashMap<String, Object>())
+                .put("token", token)
+                .put("user", jwtUsers)
+                .build();
 
         onlineUserService.saveUser(jwtUsers, token, request);
 
