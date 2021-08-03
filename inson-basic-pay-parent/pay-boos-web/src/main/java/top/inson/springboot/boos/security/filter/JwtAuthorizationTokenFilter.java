@@ -3,6 +3,7 @@ package top.inson.springboot.boos.security.filter;
 import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -55,10 +56,18 @@ public class JwtAuthorizationTokenFilter extends AbstractJwtAuthorizationTokenFi
             }catch (Exception e){
                 log.error("读取缓存信息异常", e);
             }
-            if (onlineUser != null){
-                if (jwtTokenUtil.validateToken(token)) {
-                    JwtAdminUsers adminUsers = (JwtAdminUsers) userDetailsService.loadUserByUsername(onlineUser.getUserName());
-
+            if (onlineUser != null && SecurityContextHolder.getContext().getAuthentication() == null){
+                JwtAdminUsers adminUsers = (JwtAdminUsers) userDetailsService.loadUserByUsername(onlineUser.getUserName());
+                boolean valid = false;
+                try {
+                    if (adminTokenUtil.validateToken(token, adminUsers)) {
+                        valid = true;
+                    }
+                }catch (ExpiredJwtException e){
+                    log.info("时间过期：{}", e.getMessage());
+                    valid = true;
+                }
+                if (valid) {
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(adminUsers, null, adminUsers.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

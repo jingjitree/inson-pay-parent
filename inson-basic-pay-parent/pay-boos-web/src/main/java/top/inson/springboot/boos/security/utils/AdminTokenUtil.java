@@ -4,10 +4,14 @@ package top.inson.springboot.boos.security.utils;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import top.inson.springboot.boos.security.entity.JwtAdminUsers;
 import top.inson.springboot.security.constants.JwtConstants;
+import top.inson.springboot.security.utils.JwtTokenUtil;
 import top.inson.springboot.utils.RedisUtils;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -16,6 +20,8 @@ public class AdminTokenUtil {
     private RedisUtils redisUtils;
     @Autowired
     private JwtConstants jwtConstants;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
 
     /**
@@ -34,6 +40,16 @@ public class AdminTokenUtil {
             long renew = time + jwtConstants.getRenew();
             redisUtils.expire(tokenKey, renew, TimeUnit.MILLISECONDS);
         }
+    }
+
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        JwtAdminUsers user = (JwtAdminUsers) userDetails;
+        final Date created = jwtTokenUtil.getIssuedAtDateFromToken(token);
+//        final Date expiration = getExpirationDateFromToken(token);
+//        如果token存在，且token创建日期 > 最后修改密码的日期 则代表token有效
+        return (!jwtTokenUtil.isTokenExpired(token)
+                && !jwtTokenUtil.isCreatedBeforeLastPasswordReset(created, user.getLastPasswordResetDate())
+        );
     }
 
 

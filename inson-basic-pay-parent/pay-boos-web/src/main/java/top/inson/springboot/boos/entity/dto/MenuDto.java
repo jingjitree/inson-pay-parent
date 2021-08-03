@@ -17,7 +17,10 @@ public class MenuDto implements java.io.Serializable{
     private Integer id;
     private String title;
     private String path;
+    private Integer pid;
+    private String icon;
     private Boolean hidden;
+    private Boolean cache;
     private String component;
 
     private String redirect;
