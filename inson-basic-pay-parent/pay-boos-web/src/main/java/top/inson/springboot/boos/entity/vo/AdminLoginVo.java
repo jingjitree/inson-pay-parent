@@ -12,7 +12,7 @@ import lombok.Setter;
 public class AdminLoginVo implements java.io.Serializable{
 
     @ApiModelProperty(value = "账号", required = true)
-    private String account;
+    private String username;
 
     @ApiModelProperty(value = "密码", required = true)
     private String password;

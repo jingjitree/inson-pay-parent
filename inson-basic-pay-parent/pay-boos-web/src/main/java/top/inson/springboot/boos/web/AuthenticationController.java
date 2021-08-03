@@ -61,7 +61,7 @@ public class AuthenticationController {
         //验证图形验证码
         this.validImgCode(vo);
 
-        JwtAdminUsers jwtUsers = (JwtAdminUsers) userDetailsService.loadUserByUsername(vo.getAccount());
+        JwtAdminUsers jwtUsers = (JwtAdminUsers) userDetailsService.loadUserByUsername(vo.getUsername());
         if(!jwtUsers.getPassword().equals(DigestUtil.md5Hex(vo.getPassword())))
             return CommonResult.fail("用户名或密码错误");
 
