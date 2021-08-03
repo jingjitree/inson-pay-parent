@@ -33,7 +33,7 @@ public class JwtTokenUtil implements Serializable {
         return getClaimFromToken(token, Claims::getSubject);
     }
 
-    private Date getIssuedAtDateFromToken(String token) {
+    public Date getIssuedAtDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getIssuedAt);
     }
 
@@ -53,12 +53,12 @@ public class JwtTokenUtil implements Serializable {
                 .getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(clock.now());
     }
 
-    private Boolean isCreatedBeforeLastPasswordReset(Date created, Date lastPasswordReset) {
+    public Boolean isCreatedBeforeLastPasswordReset(Date created, Date lastPasswordReset) {
         return (lastPasswordReset != null && created.before(lastPasswordReset));
     }
 
@@ -113,11 +113,13 @@ public class JwtTokenUtil implements Serializable {
         return null;
     }
 
+    /*
     public Boolean validateToken(String token) {
         Date created = this.getIssuedAtDateFromToken(token);
         log.info("token时间：{}", created);
         return !this.isTokenExpired(token);
     }
+    */
 
     /**
      * 从令牌中获取数据声明
