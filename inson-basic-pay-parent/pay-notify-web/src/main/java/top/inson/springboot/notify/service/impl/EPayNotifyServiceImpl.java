@@ -80,8 +80,6 @@ public class EPayNotifyServiceImpl implements IEPayNotifyService {
                 orderEnum = PayOrderStatusEnum.PAY_FAIL;
                 break;
             case "05":
-                orderEnum = PayOrderStatusEnum.PAY_CANCEL;
-                break;
             case "06":
                 orderEnum = PayOrderStatusEnum.PAY_CANCEL;
                 break;
