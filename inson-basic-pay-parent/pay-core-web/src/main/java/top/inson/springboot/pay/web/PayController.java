@@ -38,9 +38,6 @@ public class PayController {
             vo.setReqIp(reqIp);
             log.debug("接口请求IP" + reqIp);
             return CommonResult.success(payService.unifiedOrder(vo));
-        }catch (BadBusinessException e){
-            log.warn("主扫业务失败", e);
-            return CommonResult.fail(e.getStatus(), e.getMessage());
         } catch (Exception e) {
             log.error("主扫下单异常", e);
             return CommonResult.fail(0, e.getMessage());
@@ -57,8 +54,6 @@ public class PayController {
         log.debug("接口请求IP" + reqIp);
         try {
             return CommonResult.success(payService.microPay(vo));
-        }catch (BadBusinessException e){
-            return CommonResult.fail(e.getStatus(), e.getMessage());
         }catch (Exception e){
             return CommonResult.fail(0, e.getMessage());
         }
@@ -70,8 +65,6 @@ public class PayController {
     public CommonResult<RefundOrderDto> refundOrder(@RequestBody @Valid RefundOrderVo vo){
         try {
             return CommonResult.success(payService.refundOrder(vo));
-        }catch (BadBusinessException e){
-            return CommonResult.fail(e.getStatus(), e.getMessage());
         }catch (Exception e){
             return CommonResult.fail(0, e.getMessage());
         }
@@ -84,8 +77,6 @@ public class PayController {
     public CommonResult<OrderQueryDto> orderQuery(@RequestBody @Valid OrderQueryVo vo){
         try {
             return CommonResult.success(payService.orderQuery(vo));
-        }catch (BadBusinessException e){
-            return CommonResult.fail(e.getStatus(), e.getMessage());
         }catch (Exception e){
             return CommonResult.fail(0, e.getMessage());
         }
@@ -97,8 +88,6 @@ public class PayController {
     public CommonResult<RefundQueryDto> refundQuery(@RequestBody @Valid RefundQueryVo vo){
         try {
             return CommonResult.success(payService.refundQuery(vo));
-        }catch (BadBusinessException e){
-            return CommonResult.fail(e.getStatus(), e.getMessage());
         }catch (Exception e){
             return CommonResult.fail(0, e.getMessage());
         }
