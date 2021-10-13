@@ -60,7 +60,9 @@ public class RabbitmqConfiguration {
 
     @Bean
     public DirectExchange delayExchange(){
-        return new DirectExchange(mqConstant.getPayDelayExchange());
+        DirectExchange directExchange = new DirectExchange(mqConstant.getPayDelayExchange());
+        directExchange.setDelayed(true);
+        return directExchange;
     }
 
     @Bean
